@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Thank You</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .bg-hotpink { background-color: hotpink; }
+        .hover\:bg-lightpink:hover { background-color: lightpink; }
+    </style>
+</head>
+<body class="font-sans bg-black text-center pt-32 text-white min-h-screen flex flex-col items-center">
+
+         <div class="container w-full max-w-2xl">
+        <img src="image/F1AcademyLogo.png" alt="F1 Academy Logo" class="w-48 h-auto mx-auto mb-10"><br>
+
+    <h1 class="text-4xl font-bold text-white mb-4">Thank You!</h1>
+    <p class="text-xl mb-10 text-gray-300">Your information has been submitted successfully.</p><br>
+
+    <a href="index.html" class="home-link inline-block mt-5 py-3 px-8 bg-hotpink text-white no-underline rounded-lg font-bold transition duration-300 hover:bg-lightpink">
+        Back to Home
+    </a><br>
+
+    <div class="driver-row flex justify-center flex-wrap gap-5 mt-10">
+        <img src="image/CLC.png" alt="Driver 1" class="w-24 h-auto rounded-lg transition duration-300 ease-in-out hover:scale-110 shadow-md">
+        <img src="image/Lewis-Hamilton-Ferrari-.png" alt="Driver 2" class="w-24 h-auto rounded-lg transition duration-300 ease-in-out hover:scale-110 shadow-md">
+        <img src="image/MV.png" alt="Driver 3" class="w-24 h-auto rounded-lg transition duration-300 ease-in-out hover:scale-110 shadow-md">
+        <img src="image/Yuki-Tsunoda.png" alt="Driver 4" class="w-24 h-auto rounded-lg transition duration-300 ease-in-out hover:scale-110 shadow-md">
+        <img src="image/Lando.png" alt="Driver 5" class="w-24 h-auto rounded-lg transition duration-300 ease-in-out hover:scale-110 shadow-md">
+        <img src="image/Oscar.png" alt="Driver 6" class="w-24 h-auto rounded-lg transition duration-300 ease-in-out hover:scale-110 shadow-md">
+        <img src="image/George.png" alt="Driver 7" class="w-24 h-auto rounded-lg transition duration-300 ease-in-out hover:scale-110 shadow-md">
+        </div>
+
+    <audio id="bg-audio" loop>
+      <source src="Formula 1 Gran Premio de Mexico 2019 (Mariachi Version).mp3" type="audio/mpeg">
+    </audio>
+
+    <button onclick="document.getElementById('bg-audio').play()" class="mt-10 py-2 px-5 bg-gray-700 text-white rounded-md font-bold cursor-pointer hover:bg-gray-600 transition duration-300">
+        🔊 Play F1 Theme
+    </button>
+    </div>
+
+    <footer class="mt-auto py-5 text-sm text-gray-400">
+        © 2025 F1 Academy. All rights reserved.
+    </footer>
+
+</body>
+</html>
