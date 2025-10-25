@@ -1,11 +1,15 @@
 <?php
 session_start();
+include("conn.php"); // Include conn.php to use the new DB functions
 
 // Redirect if not logged in - Target updated to login.php
 if (!isset($_SESSION['fullname'])) {
     header("Location: login.php");
     exit();
 }
+
+$all_drivers = get_driver_standings_data($conn);
+$all_teams = get_all_teams($conn);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -41,16 +45,13 @@ if (!isset($_SESSION['fullname'])) {
 .dropdown-content {
     display: none;
     position: absolute;
-    /* FIX: Changed 'top: 45px;' to 'top: 100%;' and added a slight negative margin. 
-       This ensures the content starts exactly where the trigger element ends, eliminating the gap. */
     top: 100%; 
-    margin-top: -4px; /* Small overlap to maintain connection and prevent gap */
+    margin-top: -4px; 
     left: 50%;
     transform: translateX(-50%);
     padding: 20px;
     min-width: 800px;
     z-index: 200;
-    /* Styles for dropdown content background and shadow remain */
     background-color: #111; 
     border: 1px solid #333; 
     border-radius: 10px;
@@ -83,50 +84,64 @@ if (!isset($_SESSION['fullname'])) {
 
         <div class="dropdown relative">
             <a href="#" class="text-white font-bold cursor-pointer transition duration-300 flex items-center gap-1 hover:text-hotpink">Schedule <span class="arrow text-xs">▼</span></a>
-            <div class="dropdown-content bg-gray-900 border border-gray-700 rounded-xl shadow-lg text-center">
-                <a href="#" class="block p-2 hover:bg-gray-800 rounded-lg">2025 Calendar</a>
-                <a href="#" class="block p-2 hover:bg-gray-800 rounded-lg">Race Weekends</a>
+            <div class="dropdown-content bg-gray-900 border border-gray-700 rounded-xl shadow-lg text-center min-w-[300px]">
+                <a href="schedule_calendar.php" class="block p-2 hover:bg-gray-800 rounded-lg">🗓️ 2025 Calendar (Yearly View)</a>
+                <a href="race_weekends.php" class="block p-2 hover:bg-gray-800 rounded-lg">🏁 Race Weekends (Details)</a>
             </div>
         </div>
 
         <div class="dropdown relative">
             <a href="#" class="text-white font-bold cursor-pointer transition duration-300 flex items-center gap-1 hover:text-hotpink">Results <span class="arrow text-xs">▼</span></a>
-            <div class="dropdown-content bg-gray-900 border border-gray-700 rounded-xl shadow-lg text-center">
-                <a href="#" class="block p-2 hover:bg-gray-800 rounded-lg">Latest Results</a>
-                <a href="#" class="block p-2 hover:bg-gray-800 rounded-lg">Driver Standings</a>
-                <a href="#" class="block p-2 hover:bg-gray-800 rounded-lg">Constructor Standings</a>
+            <div class="dropdown-content bg-gray-900 border border-gray-700 rounded-xl shadow-lg text-center min-w-[300px]">
+                <a href="latest_results.php" class="block p-2 hover:bg-gray-800 rounded-lg">🏆 Latest Race Result</a>
+                <a href="driver_standings.php" class="block p-2 hover:bg-gray-800 rounded-lg">🔢 Driver Standings</a>
+                <a href="constructor_standings.php" class="block p-2 hover:bg-gray-800 rounded-lg">⚙️ Constructor Standings</a>
             </div>
         </div>
 
         <div class="dropdown relative">
             <a href="#" class="text-white font-bold cursor-pointer transition duration-300 flex items-center gap-1 hover:text-hotpink">Drivers <span class="arrow text-xs">▼</span></a>
-            <div class="dropdown-content bg-gray-900 border border-gray-700 rounded-xl shadow-lg text-center">
+            <div class="dropdown-content bg-gray-900 border border-gray-700 rounded-xl shadow-lg text-center max-w-5xl">
+                <p class="text-sm font-light text-gray-400 mb-2">Click a driver for details (Sponsors, Team)</p>
                 <div class="team-grid grid grid-cols-5 gap-3">
-                    <div class="team-card p-3 rounded-xl font-bold cursor-pointer transition duration-300 ease-in-out hover:scale-105 hover:shadow-hotpink/50" onclick="location.href='drivers/max.php'">
-                        <p class="text-sm">#1</p>
-                        <img src="image/MV.png" alt="Max Verstappen" class="w-full object-contain mt-1">
-                        Max Verstappen
-                    </div>
+                    <?php if (!empty($all_drivers)): ?>
+                        <?php foreach (array_slice($all_drivers, 0, 10) as $driver): // Show top 10 drivers ?>
+                            <div class="team-card p-3 rounded-xl font-bold cursor-pointer text-sm transition duration-300 ease-in-out hover:scale-105 hover:shadow-hotpink/50 bg-gray-800/50" onclick="location.href='driver_details.php?id=<?php echo $driver['id']; ?>'">
+                                <p class="text-sm text-hotpink">#<?php echo htmlspecialchars($driver['standing_position']); ?></p>
+                                <img src="<?php echo htmlspecialchars($driver['image_path']); ?>" alt="<?php echo htmlspecialchars($driver['fullname']); ?>" class="w-full h-24 object-contain mt-1 rounded-lg mx-auto">
+                                <?php echo htmlspecialchars($driver['fullname']); ?>
+                                <p class="text-xs font-light text-gray-400"><?php echo htmlspecialchars($driver['team_name']); ?></p>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <p class="col-span-5 py-4 text-gray-400">No driver data available yet.</p>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
 
         <div class="dropdown relative">
             <a href="#" class="text-white font-bold cursor-pointer transition duration-300 flex items-center gap-1 hover:text-hotpink">Teams <span class="arrow text-xs">▼</span></a>
-            <div class="dropdown-content bg-gray-900 border border-gray-700 rounded-xl shadow-lg text-center">
-                <div class="team-grid grid grid-cols-3 gap-3">
-                    <div class="team-card bg-ferrari p-3 rounded-xl font-bold cursor-pointer transition duration-300 ease-in-out hover:scale-105 hover:shadow-hotpink/50" onclick="location.href='teams/ferrari.php'">
-                        Ferrari
-                        <img src="image/2025ferraricarright.avif" alt="Ferrari Car">
-                    </div>
-                    <div class="team-card bg-mercedes p-3 rounded-xl font-bold cursor-pointer transition duration-300 ease-in-out hover:scale-105 hover:shadow-hotpink/50" onclick="location.href='teams/mercedes.php'">
-                        Mercedes
-                        <img src="image/2025mercedescarright.avif" alt="Mercedes Car">
-                    </div>
-                    <div class="team-card bg-mclaren p-3 rounded-xl font-bold cursor-pointer transition duration-300 ease-in-out hover:scale-105 hover:shadow-hotpink/50" onclick="location.href='teams/mclaren.php'">
-                        McLaren
-                        <img src="image/2025mclarencarright.avif" alt="McLaren Car">
-                    </div>
+            <div class="dropdown-content bg-gray-900 border border-gray-700 rounded-xl shadow-lg text-center max-w-5xl">
+                <p class="text-sm font-light text-gray-400 mb-2">Click a team for details (Drivers, Sponsors)</p>
+                <div class="team-grid grid grid-cols-5 gap-3">
+                    <?php if (!empty($all_teams)): ?>
+                        <?php 
+                            $team_colors = [
+                                'McLaren' => 'bg-mclaren', 'Ferrari' => 'bg-ferrari', 'Mercedes' => 'bg-mercedes', 
+                                'Red Bull Racing' => 'bg-redbull', 'Aston Martin' => 'bg-aston', 'Alpine' => 'bg-alpine', 
+                                'Williams' => 'bg-williams', 'Kick Sauber' => 'bg-kick text-black', 'RB Cash App' => 'bg-rb'
+                            ];
+                        ?>
+                        <?php foreach (array_slice($all_teams, 0, 10) as $team): ?>
+                            <div class="team-card <?php echo $team_colors[$team['name']] ?? 'bg-gray-700'; ?> p-3 rounded-xl font-bold cursor-pointer transition duration-300 ease-in-out hover:scale-105 hover:shadow-hotpink/50" onclick="location.href='team_details.php?name=<?php echo urlencode($team['name']); ?>'">
+                                <?php echo htmlspecialchars($team['name']); ?>
+                                <img src="<?php echo htmlspecialchars($team['car_image_path']); ?>" alt="<?php echo htmlspecialchars($team['name']); ?> Car" class="w-full max-h-32 object-contain mt-5">
+                            </div>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <p class="col-span-5 py-4 text-gray-400">No team data available yet.</p>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
