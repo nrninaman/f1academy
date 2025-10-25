@@ -29,7 +29,6 @@ $background_colors = json_encode(array_slice($base_colors, 0, count($distributio
     <meta charset="UTF-8">
     <title>Admin Dashboard | F1 Academy</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Chart.js CDN for Analytics Graph -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
     <style>
         .bg-hotpink { background-color: hotpink; }
@@ -40,42 +39,49 @@ $background_colors = json_encode(array_slice($base_colors, 0, count($distributio
 </head>
 <body class="bg-gray-900 text-white font-sans flex">
 
-    <!-- Sidebar Navigation -->
     <aside class="w-64 bg-gray-800 h-screen fixed p-6">
         <h1 class="text-3xl font-extrabold mb-8 text-hotpink">Admin Panel</h1>
         <nav class="admin-nav space-y-4">
             <a href="admin_dashboard.php" class="block text-lg font-bold text-hotpink">📊 Dashboard</a>
+            <a href="admin_requests.php" class="block text-lg font-bold text-white hover:text-hotpink">📧 Requests</a>
             <a href="admin_users.php" class="block text-lg font-bold text-white hover:text-hotpink">👤 Users List</a>
-            <a href="admin_teams.php" class="block text-lg font-bold text-white hover:text-hotpink">🏎️ Teams List</a>
-            <a href="admin_sponsors.php" class="block text-lg font-bold text-white hover:text-hotpink">💰 Sponsors List</a>
+            <a href="admin_drivers.php" class="block text-lg font-bold text-white hover:text-hotpink">🧑‍💻 Drivers (CRUD)</a>
+            <a href="admin_teams.php" class="block text-lg font-bold text-white hover:text-hotpink">🏎️ Teams (CRUD)</a>
+            <a href="admin_sponsors.php" class="block text-lg font-bold text-white hover:text-hotpink">💰 Sponsors (CRUD)</a>
+            <a href="admin_races.php" class="block text-lg font-bold text-white hover:text-hotpink">🗓️ Races & Results (CRUD)</a>
             <a href="logout.php" class="block text-lg font-bold text-white hover:text-red-500 pt-6">🚪 Logout</a>
         </nav>
     </aside>
 
-    <!-- Main Content Area -->
     <div class="flex-1 ml-64 p-10">
         <header class="mb-10 border-b border-gray-700 pb-4">
             <h2 class="text-4xl font-bold">Academy Overview</h2>
             <p class="text-gray-400">Welcome, Admin User.</p>
         </header>
 
-        <!-- Summary Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-12">
             <div class="bg-gray-800 p-6 rounded-xl shadow-lg border-b-4 border-hotpink">
                 <p class="text-sm uppercase text-gray-400 font-semibold">Total Registered Users</p>
-                <p class="text-5xl font-extrabold mt-2"><?php echo $summary['total_users']; ?></p>
+                <p class="text-3xl font-extrabold mt-2"><?php echo $summary['total_users']; ?></p>
             </div>
             <div class="bg-gray-800 p-6 rounded-xl shadow-lg border-b-4 border-blue-500">
-                <p class="text-sm uppercase text-gray-400 font-semibold">Total F1 Teams Tracked</p>
-                <p class="text-5xl font-extrabold mt-2"><?php echo $summary['total_teams']; ?></p>
+                <p class="text-sm uppercase text-gray-400 font-semibold">Total F1 Teams</p>
+                <p class="text-3xl font-extrabold mt-2"><?php echo $summary['total_teams']; ?></p>
             </div>
             <div class="bg-gray-800 p-6 rounded-xl shadow-lg border-b-4 border-green-500">
-                <p class="text-sm uppercase text-gray-400 font-semibold">Total Sponsors Tracked</p>
-                <p class="text-5xl font-extrabold mt-2"><?php echo $summary['total_sponsors']; ?></p>
+                <p class="text-sm uppercase text-gray-400 font-semibold">Total Sponsors</p>
+                <p class="text-3xl font-extrabold mt-2"><?php echo $summary['total_sponsors']; ?></p>
+            </div>
+            <div class="bg-gray-800 p-6 rounded-xl shadow-lg border-b-4 border-yellow-500">
+                <p class="text-sm uppercase text-gray-400 font-semibold">Total Drivers</p>
+                <p class="text-3xl font-extrabold mt-2"><?php echo $summary['total_drivers']; ?></p>
+            </div>
+            <div class="bg-gray-800 p-6 rounded-xl shadow-lg border-b-4 border-red-500">
+                <p class="text-sm uppercase text-gray-400 font-semibold">Total Races</p>
+                <p class="text-3xl font-extrabold mt-2"><?php echo $summary['total_races']; ?></p>
             </div>
         </div>
 
-        <!-- Analysis Graph -->
         <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
             <h3 class="text-2xl font-semibold mb-4 border-b border-gray-700 pb-2">User Team Distribution</h3>
             <div class="w-full h-96">
@@ -84,7 +90,6 @@ $background_colors = json_encode(array_slice($base_colors, 0, count($distributio
         </div>
     </div>
 
-    <!-- Chart.js Initialization Script -->
     <script>
         const ctx = document.getElementById('teamChart').getContext('2d');
         const teamChart = new Chart(ctx, {
