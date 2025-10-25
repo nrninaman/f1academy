@@ -20,15 +20,13 @@ if ($conn->connect_error) {
  * All functions performing direct database operations are defined here.
  */
 
+// --- USER AUTH & PROFILE FUNCTIONS ---
+
 /**
  * Checks if a user exists and retrieves their details by email.
  * Includes the 'role' field.
- * @param mysqli $conn The database connection object.
- * @param string $email The user's email address.
- * @return array|null The user's data array on success, or null if not found/error.
  */
 function check_user_by_email($conn, $email) {
-    // Prepare statement to select all user data based on email, including role
     $stmt = $conn->prepare("SELECT id, fullname, password, role FROM users WHERE email = ?");
     $stmt->bind_param("s", $email);
     $stmt->execute();
@@ -42,7 +40,6 @@ function check_user_by_email($conn, $email) {
  * Inserts a new user into the database.
  */
 function insert_new_user($conn, $fullname, $email, $nationality, $age, $gender, $hashed_password) {
-    // Prepare statement for inserting new user data
     $stmt = $conn->prepare("INSERT INTO users (fullname, email, nationality, age, gender, password) VALUES (?, ?, ?, ?, ?, ?)");
     $stmt->bind_param("sssiss", $fullname, $email, $nationality, $age, $gender, $hashed_password);
     $success = $stmt->execute();
@@ -54,8 +51,7 @@ function insert_new_user($conn, $fullname, $email, $nationality, $age, $gender, 
  * Retrieves a user's details by their ID.
  */
 function get_user_by_id($conn, $user_id) {
-    // Prepare statement to select specific user data based on user ID
-    $stmt = $conn->prepare("SELECT fullname, email, nationality, age, gender, team, sponsor FROM users WHERE id = ?");
+    $stmt = $conn->prepare("SELECT fullname, email, nationality, age, gender, team, sponsor, team_request, sponsor_request FROM users WHERE id = ?");
     $stmt->bind_param("i", $user_id);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -65,11 +61,11 @@ function get_user_by_id($conn, $user_id) {
 }
 
 /**
- * Updates the user's team and nationality in the database.
+ * Updates user's name, email, nationality, and sets team/sponsor requests in the database.
  */
-function update_user_profile($conn, $team, $nationality, $user_id) {
-    $stmt = $conn->prepare("UPDATE users SET team = ?, nationality = ? WHERE id = ?");
-    $stmt->bind_param("ssi", $team, $nationality, $user_id);
+function update_user_full_profile_and_requests($conn, $fullname, $email, $nationality, $team_request, $sponsor_request, $user_id) {
+    $stmt = $conn->prepare("UPDATE users SET fullname = ?, email = ?, nationality = ?, team_request = ?, sponsor_request = ? WHERE id = ?");
+    $stmt->bind_param("sssssi", $fullname, $email, $nationality, $team_request, $sponsor_request, $user_id);
     $success = $stmt->execute();
     $stmt->close();
     return $success;
@@ -97,25 +93,60 @@ function update_user_sponsor($conn, $sponsor, $user_id) {
     return $success;
 }
 
-// --- ADMIN DASHBOARD FUNCTIONS ---
+// --- ADMIN REQUESTS FUNCTIONS ---
 
 /**
- * Retrieves a count of total users, teams, and sponsors.
- * @param mysqli $conn The database connection object.
- * @return array Array with counts.
+ * Retrieves all pending user team and sponsor requests.
+ */
+function get_pending_requests($conn) {
+    $query = "SELECT id, fullname, email, team_request, sponsor_request FROM users WHERE team_request IS NOT NULL OR sponsor_request IS NOT NULL";
+    $result = $conn->query($query);
+    $data = [];
+    while ($row = $result->fetch_assoc()) {
+        $data[] = $row;
+    }
+    return $data;
+}
+
+/**
+ * Approves a team request.
+ */
+function approve_team_request($conn, $user_id, $team_name) {
+    $stmt = $conn->prepare("UPDATE users SET team = ?, team_request = NULL WHERE id = ?");
+    $stmt->bind_param("si", $team_name, $user_id);
+    $success = $stmt->execute();
+    $stmt->close();
+    return $success;
+}
+
+/**
+ * Approves a sponsor request.
+ */
+function approve_sponsor_request($conn, $user_id, $sponsor_name) {
+    $stmt = $conn->prepare("UPDATE users SET sponsor = ?, sponsor_request = NULL WHERE id = ?");
+    $stmt->bind_param("si", $sponsor_name, $user_id);
+    $success = $stmt->execute();
+    $stmt->close();
+    return $success;
+}
+
+// --- ADMIN DASHBOARD & GENERAL UTILITY FUNCTIONS ---
+
+/**
+ * Retrieves a count of total users, teams, sponsors, drivers, and races.
  */
 function get_admin_summary_counts($conn) {
     $summary = [];
     $summary['total_users'] = $conn->query("SELECT COUNT(*) FROM users")->fetch_row()[0];
     $summary['total_teams'] = $conn->query("SELECT COUNT(*) FROM teams")->fetch_row()[0];
     $summary['total_sponsors'] = $conn->query("SELECT COUNT(*) FROM sponsors")->fetch_row()[0];
+    $summary['total_drivers'] = $conn->query("SELECT COUNT(*) FROM drivers")->fetch_row()[0];
+    $summary['total_races'] = $conn->query("SELECT COUNT(*) FROM races")->fetch_row()[0];
     return $summary;
 }
 
 /**
  * Retrieves team selection data for the analytics graph.
- * @param mysqli $conn The database connection object.
- * @return array Array of team names and user counts.
  */
 function get_team_distribution_data($conn) {
     $query = "SELECT team, COUNT(id) as count FROM users WHERE team IS NOT NULL GROUP BY team";
@@ -131,33 +162,7 @@ function get_team_distribution_data($conn) {
  * Retrieves all users for the user list page.
  */
 function get_all_users($conn) {
-    $query = "SELECT id, fullname, email, nationality, age, gender, team, sponsor, role FROM users";
-    $result = $conn->query($query);
-    $data = [];
-    while ($row = $result->fetch_assoc()) {
-        $data[] = $row;
-    }
-    return $data;
-}
-
-/**
- * Retrieves all teams for the team list page.
- */
-function get_all_teams($conn) {
-    $query = "SELECT * FROM teams";
-    $result = $conn->query($query);
-    $data = [];
-    while ($row = $result->fetch_assoc()) {
-        $data[] = $row;
-    }
-    return $data;
-}
-
-/**
- * Retrieves all sponsors for the sponsor list page.
- */
-function get_all_sponsors($conn) {
-    $query = "SELECT * FROM sponsors";
+    $query = "SELECT id, fullname, email, nationality, age, gender, team, sponsor, team_request, sponsor_request, role FROM users";
     $result = $conn->query($query);
     $data = [];
     while ($row = $result->fetch_assoc()) {
@@ -177,12 +182,100 @@ function delete_user_by_id($conn, $id) {
     return $success;
 }
 
+// --- TEAM CRUD FUNCTIONS ---
+
+/**
+ * Retrieves all teams for the team list page.
+ */
+function get_all_teams($conn) {
+    $query = "SELECT * FROM teams";
+    $result = $conn->query($query);
+    $data = [];
+    while ($row = $result->fetch_assoc()) {
+        $row['driver_count'] = $conn->query("SELECT COUNT(*) FROM drivers WHERE team_name = '{$row['name']}'")->fetch_row()[0];
+        $data[] = $row;
+    }
+    return $data;
+}
+
+/**
+ * Retrieves a single team by name.
+ */
+function get_team_by_name($conn, $name) {
+    $stmt = $conn->prepare("SELECT * FROM teams WHERE name = ?");
+    $stmt->bind_param("s", $name);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $team = $result->fetch_assoc();
+    $stmt->close();
+    return $team;
+}
+
+/**
+ * Inserts a new team.
+ */
+function insert_new_team($conn, $name, $base_country, $engine_supplier) {
+    $stmt = $conn->prepare("INSERT INTO teams (name, base_country, engine_supplier) VALUES (?, ?, ?)");
+    $stmt->bind_param("sss", $name, $base_country, $engine_supplier);
+    $success = $stmt->execute();
+    $stmt->close();
+    return $success;
+}
+
+/**
+ * Updates an existing team.
+ */
+function update_team($conn, $id, $name, $base_country, $engine_supplier, $logo_path, $car_image_path) {
+    $stmt = $conn->prepare("UPDATE teams SET name = ?, base_country = ?, engine_supplier = ?, logo_path = ?, car_image_path = ? WHERE id = ?");
+    $stmt->bind_param("sssssi", $name, $base_country, $engine_supplier, $logo_path, $car_image_path, $id);
+    $success = $stmt->execute();
+    $stmt->close();
+    return $success;
+}
+
 /**
  * Deletes a team by ID.
  */
 function delete_team_by_id($conn, $id) {
     $stmt = $conn->prepare("DELETE FROM teams WHERE id = ?");
     $stmt->bind_param("i", $id);
+    $success = $stmt->execute();
+    $stmt->close();
+    return $success;
+}
+
+// --- SPONSOR CRUD FUNCTIONS ---
+
+/**
+ * Retrieves all sponsors for the sponsor list page.
+ */
+function get_all_sponsors($conn) {
+    $query = "SELECT * FROM sponsors";
+    $result = $conn->query($query);
+    $data = [];
+    while ($row = $result->fetch_assoc()) {
+        $data[] = $row;
+    }
+    return $data;
+}
+
+/**
+ * Inserts a new sponsor.
+ */
+function insert_new_sponsor($conn, $name, $sector, $contract_value) {
+    $stmt = $conn->prepare("INSERT INTO sponsors (name, sector, contract_value) VALUES (?, ?, ?)");
+    $stmt->bind_param("ssi", $name, $sector, $contract_value);
+    $success = $stmt->execute();
+    $stmt->close();
+    return $success;
+}
+
+/**
+ * Updates an existing sponsor.
+ */
+function update_sponsor($conn, $id, $name, $sector, $contract_value, $logo_path, $details) {
+    $stmt = $conn->prepare("UPDATE sponsors SET name = ?, sector = ?, contract_value = ?, logo_path = ?, details = ? WHERE id = ?");
+    $stmt->bind_param("ssissi", $name, $sector, $contract_value, $logo_path, $details, $id);
     $success = $stmt->execute();
     $stmt->close();
     return $success;
@@ -198,4 +291,200 @@ function delete_sponsor_by_id($conn, $id) {
     $stmt->close();
     return $success;
 }
+
+// --- DRIVER CRUD & STANDINGS FUNCTIONS ---
+
+/**
+ * Retrieves all drivers ordered by standing position.
+ */
+function get_all_drivers($conn) {
+    $query = "SELECT * FROM drivers ORDER BY standing_position ASC";
+    $result = $conn->query($query);
+    $data = [];
+    while ($row = $result->fetch_assoc()) {
+        $data[] = $row;
+    }
+    return $data;
+}
+
+/**
+ * Retrieves a single driver by ID.
+ */
+function get_driver_by_id($conn, $id) {
+    $stmt = $conn->prepare("SELECT * FROM drivers WHERE id = ?");
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $driver = $result->fetch_assoc();
+    $stmt->close();
+    return $driver;
+}
+
+/**
+ * Inserts a new driver.
+ */
+function insert_new_driver($conn, $fullname, $team_name, $sponsor_name, $standing_position, $points, $biography, $image_path) {
+    $stmt = $conn->prepare("INSERT INTO drivers (fullname, team_name, sponsor_name, standing_position, points, biography, image_path) VALUES (?, ?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("sssiiss", $fullname, $team_name, $sponsor_name, $standing_position, $points, $biography, $image_path);
+    $success = $stmt->execute();
+    $stmt->close();
+    return $success;
+}
+
+/**
+ * Updates an existing driver.
+ */
+function update_driver($conn, $id, $fullname, $team_name, $sponsor_name, $standing_position, $points, $biography, $image_path) {
+    $stmt = $conn->prepare("UPDATE drivers SET fullname = ?, team_name = ?, sponsor_name = ?, standing_position = ?, points = ?, biography = ?, image_path = ? WHERE id = ?");
+    $stmt->bind_param("sssiissi", $fullname, $team_name, $sponsor_name, $standing_position, $points, $biography, $image_path, $id);
+    $success = $stmt->execute();
+    $stmt->close();
+    return $success;
+}
+
+/**
+ * Deletes a driver by ID.
+ */
+function delete_driver_by_id($conn, $id) {
+    $stmt = $conn->prepare("DELETE FROM drivers WHERE id = ?");
+    $stmt->bind_param("i", $id);
+    $success = $stmt->execute();
+    $stmt->close();
+    return $success;
+}
+
+// --- RACE & RESULTS FUNCTIONS ---
+
+/**
+ * Retrieves all races, ordered by round number.
+ */
+function get_all_races($conn) {
+    $query = "SELECT * FROM races ORDER BY round_number ASC";
+    $result = $conn->query($query);
+    $data = [];
+    while ($row = $result->fetch_assoc()) {
+        $data[] = $row;
+    }
+    return $data;
+}
+
+/**
+ * Inserts a new race.
+ */
+function insert_new_race($conn, $name, $date, $details, $round_number) {
+    $stmt = $conn->prepare("INSERT INTO races (name, date, details, round_number) VALUES (?, ?, ?, ?)");
+    $stmt->bind_param("sssi", $name, $date, $details, $round_number);
+    $success = $stmt->execute();
+    $stmt->close();
+    return $success;
+}
+
+/**
+ * Updates an existing race.
+ */
+function update_race($conn, $id, $name, $date, $details, $round_number, $is_completed) {
+    $stmt = $conn->prepare("UPDATE races SET name = ?, date = ?, details = ?, round_number = ?, is_completed = ? WHERE id = ?");
+    $stmt->bind_param("sssiii", $name, $date, $details, $round_number, $is_completed, $id);
+    $success = $stmt->execute();
+    $stmt->close();
+    return $success;
+}
+
+/**
+ * Deletes a race by ID.
+ */
+function delete_race_by_id($conn, $id) {
+    $stmt = $conn->prepare("DELETE FROM races WHERE id = ?");
+    $stmt->bind_param("i", $id);
+    $success = $stmt->execute();
+    $stmt->close();
+    return $success;
+}
+
+/**
+ * Retrieves results for a specific race.
+ */
+function get_race_results($conn, $race_id) {
+    $stmt = $conn->prepare("
+        SELECT 
+            r.position, r.points, d.fullname, d.team_name, d.image_path, d.id AS driver_id
+        FROM 
+            results r
+        JOIN 
+            drivers d ON r.driver_id = d.id
+        WHERE 
+            r.race_id = ?
+        ORDER BY 
+            r.position ASC
+    ");
+    $stmt->bind_param("i", $race_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $data = [];
+    while ($row = $result->fetch_assoc()) {
+        $data[] = $row;
+    }
+    $stmt->close();
+    return $data;
+}
+
+/**
+ * Inserts or updates a race result.
+ */
+function insert_or_update_race_result($conn, $race_id, $driver_id, $position, $points) {
+    // Attempt to update (if exists) or insert (if not exists)
+    $stmt = $conn->prepare("
+        INSERT INTO results (race_id, driver_id, position, points) 
+        VALUES (?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE 
+            position = VALUES(position), points = VALUES(points)
+    ");
+    $stmt->bind_param("iiii", $race_id, $driver_id, $position, $points);
+    $success = $stmt->execute();
+    $stmt->close();
+    return $success;
+}
+
+
+// --- DASHBOARD DISPLAY FUNCTIONS (Complex Joins) ---
+
+/**
+ * Retrieves current driver standings.
+ */
+function get_driver_standings_data($conn) {
+    $query = "
+        SELECT 
+            d.id, d.fullname, d.team_name, d.standing_position, d.points, d.image_path
+        FROM 
+            drivers d
+        ORDER BY 
+            d.standing_position ASC, d.points DESC
+    ";
+    $result = $conn->query($query);
+    $data = [];
+    while ($row = $result->fetch_assoc()) {
+        $data[] = $row;
+    }
+    return $data;
+}
+
+/**
+ * Retrieves the latest race result.
+ */
+function get_latest_race_result($conn) {
+    // Find the race with the highest round_number that is completed
+    $race_query = "SELECT id, name, round_number FROM races WHERE is_completed = TRUE ORDER BY round_number DESC LIMIT 1";
+    $race_result = $conn->query($race_query);
+    $latest_race = $race_result->fetch_assoc();
+
+    if (!$latest_race) {
+        return ['race' => null, 'results' => []];
+    }
+
+    $race_id = $latest_race['id'];
+    $results = get_race_results($conn, $race_id);
+
+    return ['race' => $latest_race, 'results' => $results];
+}
+
 ?>
