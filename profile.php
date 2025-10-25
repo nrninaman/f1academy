@@ -10,41 +10,65 @@ if (!isset($_SESSION['user_id'])) {
 $user_id = $_SESSION['user_id'];
 $message = "";
 
-// Team list standardized to use "Red Bull Racing"
+// Team list standardized
 $f1_teams = [
-    "Ferrari",
-    "Mercedes",
-    "Red Bull Racing",
-    "McLaren",
-    "Aston Martin",
-    "Alpine",
-    "Williams",
-    "Kick Sauber",
-    "RB Cash App"
+    "Ferrari", "Mercedes", "Red Bull Racing", "McLaren", "Aston Martin", "Alpine", "Williams", "Kick Sauber", "RB Cash App"
 ];
+
+// Sponsor list standardized from f1academy.sql/sponsors table
+$f1_sponsors = [
+    "Red Bull", "Mercedes", "Ferrari", "McLaren"
+];
+
 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile'])) {
     
-    $new_team = trim($_POST['team']);
+    $new_fullname = trim($_POST['fullname']);
+    $new_email = trim($_POST['email']);
     $new_nationality = trim($_POST['nationality']);
-    
-    if (empty($new_team) || empty($new_nationality)) {
-        $message = "<div class='text-red-500 font-bold'>Error: Team and Nationality fields cannot be empty.</div>";
-    } elseif (!in_array($new_team, $f1_teams)) {
-        $message = "<div class='text-red-500 font-bold'>Error: Invalid team selected.</div>";
+    $new_team = trim($_POST['team']);
+    $new_sponsor = trim($_POST['sponsor']);
+
+    $team_request = null;
+    $sponsor_request = null;
+
+    // Validation
+    if (empty($new_fullname) || empty($new_email) || empty($new_nationality)) {
+        $message = "<div class='text-red-500 font-bold'>Error: Full Name, Email, and Nationality fields cannot be empty.</div>";
     } else {
-        // Use function to update user profile
-        if (update_user_profile($conn, $new_team, $new_nationality, $user_id)) {
-            // Update session for immediate team change display
-            $_SESSION['team'] = $new_team;
-            $message = "<div class='text-green-500 font-bold'>Profile updated successfully!</div>";
+        // Handle Team Request
+        if (!empty($new_team) && in_array($new_team, $f1_teams)) {
+            // Set as request, admin needs to approve
+            $team_request = $new_team;
+        }
+
+        // Handle Sponsor Request
+        if (!empty($new_sponsor) && in_array($new_sponsor, $f1_sponsors)) {
+            // Set as request, admin needs to approve
+            $sponsor_request = $new_sponsor;
+        }
+
+        // Use function to update user profile (including name, email, and setting requests)
+        if (update_user_full_profile_and_requests($conn, $new_fullname, $new_email, $new_nationality, $team_request, $sponsor_request, $user_id)) {
+            // Update session for immediate display of name/email change
+            $_SESSION['fullname'] = $new_fullname;
+
+            $success_message = "Profile updated successfully!";
+            if ($team_request) {
+                $success_message .= " Team request for **$team_request** submitted for admin approval.";
+            }
+             if ($sponsor_request) {
+                $success_message .= " Sponsor request for **$sponsor_request** submitted for admin approval.";
+            }
+            $message = "<div class='text-green-500 font-bold'>$success_message</div>";
+
         } else {
-            $message = "<div class='text-red-500 font-bold'>Database Error: Unable to update profile.</div>";
+            $message = "<div class='text-red-500 font-bold'>Database Error: Unable to update profile. (Check if email is already in use)</div>";
         }
     }
 }
 
-// Retrieve current user details
+// Retrieve current user details (including requests)
 $user = get_user_by_id($conn, $user_id);
 
 if (!$user) {
@@ -53,8 +77,10 @@ if (!$user) {
     exit();
 }
 
-$team = $user['team'] ?? "Not Selected";
-$sponsor = $user['sponsor'] ?? "Not Assigned";
+$current_team = $user['team'] ?? "Not Selected";
+$current_sponsor = $user['sponsor'] ?? "Not Assigned";
+$team_request_status = $user['team_request'] ?? "";
+$sponsor_request_status = $user['sponsor_request'] ?? "";
 ?>
 
 <!DOCTYPE html>
@@ -90,49 +116,62 @@ $sponsor = $user['sponsor'] ?? "Not Assigned";
             <?php echo htmlspecialchars($user['fullname']); ?>'s Details
         </h2>
         
-        <label class="block font-bold mt-4 text-gray-300">Email Address</label>
-        <div class="display-value p-2 text-lg border-b border-gray-800 mb-4">
-            <?php echo htmlspecialchars($user['email']); ?>
-        </div>
-        
-        <label class="block font-bold mt-4 text-gray-300">Age</label>
-        <div class="display-value p-2 text-lg border-b border-gray-800 mb-4">
-            <?php echo htmlspecialchars($user['age']); ?>
-        </div>
-        
-        <label class="block font-bold mt-4 text-gray-300">Gender</label>
-        <div class="display-value p-2 text-lg border-b border-gray-800 mb-4">
-            <?php echo htmlspecialchars(ucfirst($user['gender'])); ?>
-        </div>
+        <form method="POST" action="profile.php" class="space-y-4">
+            
+            <label for="fullname" class="block font-bold pt-4 text-gray-300">Full Name</label>
+            <input type="text" id="fullname" name="fullname" value="<?php echo htmlspecialchars($user['fullname']); ?>" required 
+                   class="w-full p-3 mt-1 box-border border border-gray-600 bg-black text-white rounded-md focus:outline-none focus:ring-2 focus:ring-hotpink">
 
-        <label class="block font-bold mt-4 text-gray-300">Assigned Sponsor</label>
-        <div class="display-value p-2 text-lg border-b border-gray-800 mb-4">
-            <?php echo htmlspecialchars($sponsor); ?>
-        </div>
+            <label for="email" class="block font-bold pt-4 text-gray-300">Email Address</label>
+            <input type="email" id="email" name="email" value="<?php echo htmlspecialchars($user['email']); ?>" required 
+                   class="w-full p-3 mt-1 box-border border border-gray-600 bg-black text-white rounded-md focus:outline-none focus:ring-2 focus:ring-hotpink">
+            
+            <label class="block font-bold pt-4 text-gray-300">Age</label>
+            <div class="display-value p-2 text-lg border-b border-gray-800 mb-4">
+                <?php echo htmlspecialchars($user['age']); ?>
+            </div>
+            
+            <label class="block font-bold pt-4 text-gray-300">Gender</label>
+            <div class="display-value p-2 text-lg border-b border-gray-800 mb-4">
+                <?php echo htmlspecialchars(ucfirst($user['gender'])); ?>
+            </div>
 
-        <form method="POST" action="profile.php">
-            <label for="nationality" class="block font-bold mt-4 text-gray-300">Nationality</label>
+            <label for="nationality" class="block font-bold pt-4 text-gray-300">Nationality</label>
             <input type="text" id="nationality" name="nationality" value="<?php echo htmlspecialchars($user['nationality']); ?>" required 
                    class="w-full p-3 mt-1 box-border border border-gray-600 bg-black text-white rounded-md focus:outline-none focus:ring-2 focus:ring-hotpink">
 
-            <label for="team" class="block font-bold mt-4 text-gray-300">Assigned Team</label>
-            <select id="team" name="team" required 
+
+            <label for="team" class="block font-bold pt-4 text-gray-300">Current Assigned Team: <span class="text-hotpink"><?php echo htmlspecialchars($current_team); ?></span></label>
+            <?php if ($team_request_status): ?>
+                <div class='text-yellow-500 font-bold'>**Pending Team Request: <?php echo htmlspecialchars($team_request_status); ?>**</div>
+            <?php endif; ?>
+            <select id="team" name="team"
                     class="w-full p-3 mt-1 box-border border border-gray-600 bg-black text-white rounded-md focus:outline-none focus:ring-2 focus:ring-hotpink">
-                <option value="">-- Select or Re-Select Team --</option>
+                <option value="">-- Choose New Team (Requires Admin Approval) --</option>
                 <?php foreach ($f1_teams as $t): ?>
-                    <option value="<?php echo $t; ?>" 
-                        <?php echo ($team == $t) ? 'selected' : ''; ?>>
+                    <option value="<?php echo $t; ?>">
                         <?php echo $t; ?>
                     </option>
                 <?php endforeach; ?>
-                <option value="Not Selected" disabled <?php echo ($team == "Not Selected") ? 'selected' : ''; ?>>
-                    Not Selected (Choose a team above)
-                </option>
+            </select>
+
+            <label for="sponsor" class="block font-bold pt-4 text-gray-300">Current Assigned Sponsor: <span class="text-hotpink"><?php echo htmlspecialchars($current_sponsor); ?></span></label>
+            <?php if ($sponsor_request_status): ?>
+                <div class='text-yellow-500 font-bold'>**Pending Sponsor Request: <?php echo htmlspecialchars($sponsor_request_status); ?>**</div>
+            <?php endif; ?>
+            <select id="sponsor" name="sponsor"
+                    class="w-full p-3 mt-1 box-border border border-gray-600 bg-black text-white rounded-md focus:outline-none focus:ring-2 focus:ring-hotpink">
+                <option value="">-- Choose New Sponsor (Requires Admin Approval) --</option>
+                <?php foreach ($f1_sponsors as $s): ?>
+                    <option value="<?php echo $s; ?>">
+                        <?php echo $s; ?>
+                    </option>
+                <?php endforeach; ?>
             </select>
             
             <button type="submit" name="update_profile" 
                     class="update-btn block w-full p-3 mt-6 bg-hotpink text-white border-none rounded-lg font-bold cursor-pointer transition duration-300 hover:bg-lightpink">
-                Save Changes
+                Save Changes & Submit Requests
             </button>
         </form>
     </div>
