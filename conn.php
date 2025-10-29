@@ -207,7 +207,7 @@ function delete_sponsor_by_id($conn, $id) {
 }
 
 function get_all_drivers($conn) {
-    $query = "SELECT * FROM drivers ORDER BY standing_position ASC";
+    $query = "SELECT * FROM drivers ORDER BY points DESC";
     $result = $conn->query($query);
     $data = [];
     while ($row = $result->fetch_assoc()) {

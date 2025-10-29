@@ -165,10 +165,11 @@ $drivers = get_all_drivers($conn);
                 </thead>
                 <tbody>
                     <?php if (!empty($drivers)): ?>
+                        <?php $num = 1 ?>
                         <?php foreach ($drivers as $driver): ?>
                             <tr class="hover:bg-gray-700 text-sm">
                                 <td><?php echo htmlspecialchars($driver['id']); ?></td>
-                                <td><?php echo htmlspecialchars($driver['standing_position']); ?></td>
+                                <td><?php echo $num++; ?></td>
                                 <td><?php echo htmlspecialchars($driver['fullname']); ?></td>
                                 <td><?php echo htmlspecialchars($driver['team_name']); ?></td>
                                 <td><?php echo htmlspecialchars($driver['points']); ?></td>
