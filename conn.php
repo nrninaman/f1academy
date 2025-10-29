@@ -262,9 +262,9 @@ function get_all_sponsors($conn) {
 /**
  * Inserts a new sponsor.
  */
-function insert_new_sponsor($conn, $name, $sector, $contract_value) {
-    $stmt = $conn->prepare("INSERT INTO sponsors (name, sector, contract_value) VALUES (?, ?, ?)");
-    $stmt->bind_param("ssi", $name, $sector, $contract_value);
+function insert_new_sponsor($conn, $name, $sector, $contract_value, $logo_path, $details) {
+    $stmt = $conn->prepare("INSERT INTO sponsors (name, sector, contract_value, logo_path, details) VALUES (?, ?, ?, ?, ?)");
+    $stmt->bind_param("ssiss", $name, $sector, $contract_value, $logo_path, $details);
     $success = $stmt->execute();
     $stmt->close();
     return $success;
@@ -353,7 +353,7 @@ function delete_driver_by_id($conn, $id) {
     return $success;
 }
 
-// --- RACE & RESULTS FUNCTIONS ---
+// --- RACE & RESULTS CRUD FUNCTIONS ---
 
 /**
  * Retrieves all races, ordered by round number.
@@ -366,6 +366,19 @@ function get_all_races($conn) {
         $data[] = $row;
     }
     return $data;
+}
+
+/**
+ * Retrieves a single race by ID.
+ */
+function get_race_by_id($conn, $id) {
+    $stmt = $conn->prepare("SELECT * FROM races WHERE id = ?");
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $race = $result->fetch_assoc();
+    $stmt->close();
+    return $race;
 }
 
 /**
@@ -394,6 +407,7 @@ function update_race($conn, $id, $name, $date, $details, $round_number, $is_comp
  * Deletes a race by ID.
  */
 function delete_race_by_id($conn, $id) {
+    // Deleting a race will cascade and delete all related results due to FOREIGN KEY ON DELETE CASCADE (as per f1academy.sql)
     $stmt = $conn->prepare("DELETE FROM races WHERE id = ?");
     $stmt->bind_param("i", $id);
     $success = $stmt->execute();
@@ -445,7 +459,6 @@ function insert_or_update_race_result($conn, $race_id, $driver_id, $position, $p
     return $success;
 }
 
-
 // --- DASHBOARD DISPLAY FUNCTIONS (Complex Joins) ---
 
 /**
@@ -485,6 +498,32 @@ function get_latest_race_result($conn) {
     $results = get_race_results($conn, $race_id);
 
     return ['race' => $latest_race, 'results' => $results];
+}
+
+/**
+ * Calculates current constructor standings (Coach Ranking) based on total driver points.
+ */
+function get_constructor_standings_data($conn) {
+    $query = "
+        SELECT 
+            t.name AS team_name, t.logo_path, SUM(d.points) AS total_points
+        FROM 
+            teams t
+        JOIN 
+            drivers d ON t.name = d.team_name
+        GROUP BY 
+            t.name
+        ORDER BY 
+            total_points DESC
+    ";
+    $result = $conn->query($query);
+    $data = [];
+    $rank = 1;
+    while ($row = $result->fetch_assoc()) {
+        $row['standing_position'] = $rank++;
+        $data[] = $row;
+    }
+    return $data;
 }
 
 ?>
