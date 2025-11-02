@@ -32,6 +32,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['approve_sponsor'])) {
     }
 }
 
+// Handle Approve BOTH Team and Sponsor Action - NEW LOGIC ADDED HERE
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['approve_both'])) {
+    $user_id = $_POST['user_id'];
+    $team_name = $_POST['team_name'];
+    $sponsor_name = $_POST['sponsor_name'];
+
+    // Attempt to approve both, checking for success
+    $team_success = approve_team_request($conn, $user_id, $team_name);
+    $sponsor_success = approve_sponsor_request($conn, $user_id, $sponsor_name);
+
+    if ($team_success && $sponsor_success) {
+        $message = "<div class='bg-green-500 text-white p-3 rounded-lg mb-4'>Both Team ($team_name) and Sponsor ($sponsor_name) requests for User ID $user_id approved.</div>";
+    } elseif ($team_success) {
+        $message = "<div class='bg-yellow-500 text-white p-3 rounded-lg mb-4'>Team ($team_name) approved, but an error occurred for Sponsor ($sponsor_name).</div>";
+    } elseif ($sponsor_success) {
+        $message = "<div class='bg-yellow-500 text-white p-3 rounded-lg mb-4'>Sponsor ($sponsor_name) approved, but an error occurred for Team ($team_name).</div>";
+    } else {
+        $message = "<div class='bg-red-500 text-white p-3 rounded-lg mb-4'>Error approving both requests for User ID $user_id.</div>";
+    }
+}
+
 // Fetch all pending requests
 $requests = get_pending_requests($conn);
 ?>
@@ -55,14 +76,14 @@ $requests = get_pending_requests($conn);
     <aside class="w-64 bg-gray-800 h-screen fixed p-6">
         <h1 class="text-3xl font-extrabold mb-8 text-hotpink">Admin Panel</h1>
         <nav class="admin-nav space-y-4">
-            <a href="admin_dashboard.php" class="block text-lg font-bold text-white hover:text-hotpink">📊 Dashboard</a>
-            <a href="admin_requests.php" class="block text-lg font-bold text-hotpink">📧 Requests</a>
-            <a href="admin_users.php" class="block text-lg font-bold text-white hover:text-hotpink">👤 Users List</a>
-            <a href="admin_drivers.php" class="block text-lg font-bold text-white hover:text-hotpink">🧑‍💻 Drivers (CRUD)</a>
-            <a href="admin_teams.php" class="block text-lg font-bold text-white hover:text-hotpink">🏎️ Teams (CRUD)</a>
-            <a href="admin_sponsors.php" class="block text-lg font-bold text-white hover:text-hotpink">💰 Sponsors (CRUD)</a>
-            <a href="admin_races.php" class="block text-lg font-bold text-white hover:text-hotpink">🗓️ Races & Results (CRUD)</a>
-            <a href="logout.php" class="block text-lg font-bold text-white hover:text-red-500 pt-6">🚪 Logout</a>
+            <a href="admin_dashboard.php" class="block text-lg font-bold text-white hover:text-hotpink"> Dashboard</a>
+            <a href="admin_requests.php" class="block text-lg font-bold text-hotpink"> Requests</a>
+            <a href="admin_users.php" class="block text-lg font-bold text-white hover:text-hotpink"> Users List</a>
+            <a href="admin_drivers.php" class="block text-lg font-bold text-white hover:text-hotpink"> Drivers (CRUD)</a>
+            <a href="admin_teams.php" class="block text-lg font-bold text-white hover:text-hotpink"> Teams (CRUD)</a>
+            <a href="admin_sponsors.php" class="block text-lg font-bold text-white hover:text-hotpink"> Sponsors (CRUD)</a>
+            <a href="admin_races.php" class="block text-lg font-bold text-white hover:text-hotpink"> Races & Results (CRUD)</a>
+            <a href="logout.php" class="block text-lg font-bold text-white hover:text-red-500 pt-6"> Logout</a>
         </nav>
     </aside>
 
@@ -111,8 +132,15 @@ $requests = get_pending_requests($conn);
                                         N/A
                                     <?php endif; ?>
                                 </td>
+                                
                                 <td class="whitespace-nowrap flex space-x-2">
-                                    <?php if ($request['team_request']): ?>
+                                    <?php
+                                    // Helper variables for clarity
+                                    $has_team_request = !empty($request['team_request']);
+                                    $has_sponsor_request = !empty($request['sponsor_request']);
+                                    ?>
+
+                                    <?php if ($has_team_request): ?>
                                         <form method="POST" class="inline-block" onsubmit="return confirm('Approve team **<?php echo $request['team_request']; ?>** for this user?');">
                                             <input type="hidden" name="user_id" value="<?php echo $request['id']; ?>">
                                             <input type="hidden" name="team_name" value="<?php echo $request['team_request']; ?>">
@@ -121,20 +149,33 @@ $requests = get_pending_requests($conn);
                                             </button>
                                         </form>
                                     <?php endif; ?>
-                                    <?php if ($request['sponsor_request']): ?>
+                                    
+                                    <?php if ($has_sponsor_request): ?>
                                         <form method="POST" class="inline-block" onsubmit="return confirm('Approve sponsor **<?php echo $request['sponsor_request']; ?>** for this user?');">
                                             <input type="hidden" name="user_id" value="<?php echo $request['id']; ?>">
                                             <input type="hidden" name="sponsor_name" value="<?php echo $request['sponsor_request']; ?>">
-                                            <button type="submit" name="approve_sponsor" class="text-xs bg-blue-600 hover:bg-blue-700 text-white py-1 px-3 rounded-lg font-bold transition duration-200">
+                                            <button type="submit" name="approve_sponsor" class="text-xs bg-indigo-600 hover:bg-indigo-700 text-white py-1 px-3 rounded-lg font-bold transition duration-200">
                                                 Approve Sponsor
                                             </button>
                                         </form>
                                     <?php endif; ?>
-                                    <?php if (!$request['team_request'] && !$request['sponsor_request']): ?>
+
+                                     <?php if ($has_team_request && $has_sponsor_request): ?>
+                                        <form method="POST" class="inline-block" onsubmit="return confirm('Approve **BOTH** team (<?php echo $request['team_request']; ?>) and sponsor (<?php echo $request['sponsor_request']; ?>) for this user?');">
+                                            <input type="hidden" name="user_id" value="<?php echo $request['id']; ?>">
+                                            <input type="hidden" name="team_name" value="<?php echo $request['team_request']; ?>">
+                                            <input type="hidden" name="sponsor_name" value="<?php echo $request['sponsor_request']; ?>">
+                                            <button type="submit" name="approve_both" class="text-xs bg-purple-600 hover:bg-purple-700 text-white py-1 px-3 rounded-lg font-bold transition duration-200">
+                                                Approve Both 
+                                            </button>
+                                        </form>
+                                    <?php endif; ?>
+
+                                    <?php if (!$has_team_request && !$has_sponsor_request): ?>
                                         <span class="text-gray-500">No Pending Action</span>
                                     <?php endif; ?>
                                 </td>
-                            </tr>
+                                </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr><td colspan="6" class="text-center py-4 text-gray-400">No pending user requests found.</td></tr>

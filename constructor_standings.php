@@ -3,54 +3,127 @@ session_start();
 include("conn.php");
 if (!isset($_SESSION['user_id'])) { header("Location: login.php"); exit(); }
 // Use the function to calculate team totals
+// ASSUMPTION: $teams is correctly sorted by 'total_points' DESCENDING (350, 300, 270, ...)
 $teams = get_constructor_standings_data($conn);
+
+// Separate the top 3 from the rest
+$top_teams = array_slice($teams, 0, 3);
+$remaining_teams = array_slice($teams, 3);
+
+// REVISED: Reorder the teams using the data directly from the sorted $teams array 
+// to ensure the team data and points match the visual position (P2, P1, P3).
+$podium_teams = [];
+if (isset($teams[1])) { $podium_teams[] = $teams[1]; } // Data for P2 (Silver Box)
+if (isset($teams[0])) { $podium_teams[] = $teams[0]; } // Data for P1 (Gold Center Box)
+if (isset($teams[2])) { $podium_teams[] = $teams[2]; } // Data for P3 (Bronze Box)
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Coach Ranking (Team Standings)</title>
+    <title>Coach Ranking (Team Standings) - F1 Academy</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>.bg-hotpink { background-color: hotpink; }.text-hotpink { color: hotpink; }</style>
+    <style>
+        .bg-hotpink { background-color: #FF69B4; } /* Ensuring hotpink is defined */
+        .text-hotpink { color: #FF69B4; }
+        .glow-shadow { box-shadow: 0 0 15px rgba(255, 105, 180, 0.6); } /* Hotpink glow */
+        .gradient-gold { background: linear-gradient(145deg, #FFD700 20%, #FFA500 80%); } /* Gold gradient for P1 */
+        .gradient-silver { background: linear-gradient(145deg, #C0C0C0 20%, #A9A9A9 80%); } /* Silver gradient for P2 */
+        .gradient-bronze { background: linear-gradient(145deg, #CD7F32 20%, #8B4513 80%); } /* Bronze gradient for P3 */
+    </style>
 </head>
-<body class="bg-gray-900 text-white font-sans min-h-screen p-10">
-    <header class="text-center mb-10">
-        <h1 class="text-4xl font-bold text-hotpink">Coach Ranking (Team Standings)</h1>
-        <p class="text-gray-400">Total points accumulated by each team's drivers this season.</p>
-    </header>
+<body class="bg-gray-900 text-white font-sans min-h-screen p-6 md:p-10">
+    
+    <div class="max-w-4xl mx-auto">
+        <header class="text-center mb-12">
+            <h1 class="text-5xl font-extrabold text-hotpink tracking-wider"> Constructor Standings</h1>
+            <p class="text-gray-400 mt-2 text-lg">Total points accumulated by each team's drivers this season.</p>
+        </header>
 
-    <div class="max-w-3xl mx-auto bg-gray-800 rounded-xl overflow-x-auto shadow-lg">
-        <table class="min-w-full table-auto text-left">
-            <thead>
-                <tr class="bg-gray-700 text-sm uppercase">
-                    <th class="p-3">POS</th>
-                    <th class="p-3">Team</th>
-                    <th class="p-3">Total Points</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (!empty($teams)): ?>
-                    <?php foreach ($teams as $team): ?>
-                        <tr class="hover:bg-gray-700 text-sm">
-                            <td class="p-3 font-extrabold text-hotpink"><?php echo htmlspecialchars($team['standing_position']); ?></td>
-                            <td class="p-3 flex items-center gap-3">
-                                <?php if ($team['logo_path']): ?>
-                                    <img src="<?php echo htmlspecialchars($team['logo_path']); ?>" alt="<?php echo htmlspecialchars($team['team_name']); ?>" class="w-8 h-8 object-contain">
-                                <?php endif; ?>
-                                <?php echo htmlspecialchars($team['team_name']); ?>
-                            </td>
-                            <td class="p-3 font-bold"><?php echo htmlspecialchars($team['total_points']); ?></td>
-                        </tr>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <tr><td colspan="3" class="text-center py-4 text-gray-400">No teams in the standings.</td></tr>
-                <?php endif; ?>
-            </tbody>
-        </table>
-    </div>
+        <section class="mb-12 grid grid-cols-3 gap-4 md:gap-6 items-end">
+            
+            <?php foreach ($podium_teams as $index => $team): ?>
+                <?php
+                    // Use the team's actual standing position from the array data
+                    $current_rank = (int)$team['standing_position']; 
+                    
+                    $bg_class = '';
+                    $text_color = 'text-gray-900';
+                    $size_class = 'h-56';
+                    
+                    if ($current_rank === 1) {
+                        $bg_class = 'gradient-gold glow-shadow';
+                        $icon = '🥇';
+                        $size_class = 'h-64'; // P1 is taller
+                    } elseif ($current_rank === 2) {
+                        $bg_class = 'gradient-silver';
+                        $icon = '🥈';
+                    } else { // Rank 3
+                        $bg_class = 'gradient-bronze';
+                        $icon = '🥉';
+                        $text_color = 'text-gray-100'; // For better contrast on bronze
+                    }
+                ?>
+                <div class="p-4 md:p-6 rounded-xl text-center flex flex-col justify-center transform transition duration-500 hover:scale-[1.05] <?php echo $bg_class; ?> <?php echo $size_class; ?>">
+                    <div class="text-4xl md:text-5xl mb-1 <?php echo $text_color; ?> font-black leading-none"><?php echo $icon; ?></div>
+                    <h3 class="text-3xl md:text-5xl font-black mb-1 <?php echo $text_color; ?>"><?php echo htmlspecialchars($team['total_points']); ?></h3>
+                    <p class="text-xs md:text-sm uppercase font-semibold <?php echo $text_color; ?>">Points</p>
+                    
+                    <div class="h-px w-2/3 mx-auto my-2 <?php echo ($current_rank === 1) ? 'bg-gray-900' : 'bg-white/50'; ?>"></div>
+                    
+                    <h4 class="text-md md:text-xl font-bold <?php echo $text_color; ?> mt-1">
+                        <?php echo htmlspecialchars($team['team_name']); ?>
+                    </h4>
+                    
+                    <?php if ($team['logo_path']): ?>
+                        <img src="<?php echo htmlspecialchars($team['logo_path']); ?>" alt="<?php echo htmlspecialchars($team['team_name']); ?> logo" class="w-10 h-10 object-contain mx-auto mt-2 opacity-80">
+                    <?php endif; ?>
+                </div>
+            <?php endforeach; ?>
+        </section>
 
-    <div class="text-center mt-10">
-        <a href="dashboard.php" class="text-hotpink hover:text-white transition duration-300">← Back to Dashboard</a>
+        <section class="bg-gray-800 rounded-xl overflow-hidden shadow-2xl">
+            <h3 class="text-xl font-bold p-4 bg-gray-700 border-b border-gray-600 text-hotpink">Remaining Teams</h3>
+            <table class="min-w-full table-auto text-left divide-y divide-gray-700">
+                <thead>
+                    <tr class="text-xs uppercase text-gray-400">
+                        <th class="p-3 w-16">Pos</th>
+                        <th class="p-3">Team</th>
+                        <th class="p-3 text-right">Points</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-700">
+                    <?php if (!empty($remaining_teams)): ?>
+                        <?php foreach ($remaining_teams as $team): ?>
+                            <tr class="hover:bg-gray-700 transition duration-150 text-sm">
+                                <td class="p-3 font-semibold text-gray-300"><?php echo htmlspecialchars($team['standing_position']); ?></td>
+                                <td class="p-3 flex items-center gap-4 py-4">
+                                    <?php if ($team['logo_path']): ?>
+                                        <img src="<?php echo htmlspecialchars($team['logo_path']); ?>" alt="<?php echo htmlspecialchars($team['team_name']); ?>" class="w-10 h-10 object-contain">
+                                    <?php endif; ?>
+                                    <span class="font-medium text-white"><?php echo htmlspecialchars($team['team_name']); ?></span>
+                                </td>
+                                <td class="p-3 text-right font-extrabold text-lg text-hotpink"><?php echo htmlspecialchars($team['total_points']); ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr><td colspan="3" class="text-center py-6 text-gray-400">No further teams in the standings.</td></tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </section>
+        
+        <div class="text-center mt-10">
+            <a href="dashboard.php" class="text-hotpink hover:text-white transition duration-300 text-lg font-medium">← Back to Dashboard</a>
+        </div>
+        
+        <?php if (empty($teams)): ?>
+            <div class="text-center mt-10 p-6 bg-gray-800 rounded-xl shadow-lg">
+                <p class="text-2xl text-red-400">🚨 Standings Data Missing 🚨</p>
+                <p class="text-gray-400 mt-2">Check your database connection or the <code>get_constructor_standings_data()</code> function.</p>
+            </div>
+        <?php endif; ?>
+
     </div>
 </body>
 </html>

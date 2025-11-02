@@ -8,6 +8,38 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     exit();
 }
 
+$f1_title_sponsors = [
+    'Oracle',
+    'HP (Hewlett-Packard)',
+    'PETRONAS',
+    'Visa',
+    'Cash App',
+    'Stake',
+    'Kick',
+    'MoneyGram',
+    'BWT',
+    'Aramco',
+    'Cognizant',
+    'Mastercard',
+    'Shell',
+    'Ineos',
+    'Red Bull GmbH',
+];
+
+$f1_sectors = [
+    'Cloud Technology',
+    'Energy / Oil & Gas',
+    'Financial Technology (Fintech)',
+    'Computer Hardware',
+    'Software / Data',
+    'E-commerce',
+    'Luxury / Watchmaking',
+    'Logistics',
+    'Beverage / Drink',
+    'Automotive',
+];
+
+
 $message = "";
 $sponsor_to_edit = null;
 
@@ -55,8 +87,6 @@ if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['edit_id'])) {
     $stmt->close();
 }
 
-
-// Fetch all sponsors
 $sponsors = get_all_sponsors($conn);
 ?>
 
@@ -72,6 +102,7 @@ $sponsors = get_all_sponsors($conn);
         .admin-nav a { transition: color 0.3s; }
         .admin-nav a:hover { color: hotpink; }
         th, td { padding: 12px; border-bottom: 1px solid #374151; }
+        .admin-select option { background-color: #1f2937; color: white; }
     </style>
 </head>
 <body class="bg-gray-900 text-white font-sans flex">
@@ -79,21 +110,24 @@ $sponsors = get_all_sponsors($conn);
     <aside class="w-64 bg-gray-800 h-screen fixed p-6">
         <h1 class="text-3xl font-extrabold mb-8 text-hotpink">Admin Panel</h1>
         <nav class="admin-nav space-y-4">
-            <a href="admin_dashboard.php" class="block text-lg font-bold text-white hover:text-hotpink">📊 Dashboard</a>
-            <a href="admin_requests.php" class="block text-lg font-bold text-white hover:text-hotpink">📧 Requests</a>
-            <a href="admin_users.php" class="block text-lg font-bold text-white hover:text-hotpink">👤 Users List</a>
-            <a href="admin_drivers.php" class="block text-lg font-bold text-white hover:text-hotpink">🧑‍💻 Drivers (CRUD)</a>
-            <a href="admin_teams.php" class="block text-lg font-bold text-white hover:text-hotpink">🏎️ Teams (CRUD)</a>
-            <a href="admin_sponsors.php" class="block text-lg font-bold text-hotpink">💰 Sponsors (CRUD)</a>
-            <a href="admin_races.php" class="block text-lg font-bold text-white hover:text-hotpink">🗓️ Races & Results (CRUD)</a>
-            <a href="logout.php" class="block text-lg font-bold text-white hover:text-red-500 pt-6">🚪 Logout</a>
+            <a href="admin_dashboard.php" class="block text-lg font-bold text-white hover:text-hotpink"> Dashboard</a>
+            
+            <a href="admin_requests.php" class="block text-lg font-bold text-white hover:text-hotpink">
+                 Requests
+            </a>
+            
+            <a href="admin_users.php" class="block text-lg font-bold text-white hover:text-hotpink"> Users List</a>
+            <a href="admin_drivers.php" class="block text-lg font-bold text-white hover:text-hotpink"> Drivers (CRUD)</a>
+            <a href="admin_teams.php" class="block text-lg font-bold text-white hover:text-hotpink"> Teams (CRUD)</a>
+            <a href="admin_sponsors.php" class="block text-lg font-bold text-hotpink"> Sponsors (CRUD)</a>
+            <a href="admin_races.php" class="block text-lg font-bold text-white hover:text-hotpink"> Races & Results (CRUD)</a>
+            <a href="logout.php" class="block text-lg font-bold text-white hover:text-red-500 pt-6"> Logout</a>
         </nav>
     </aside>
-
     <div class="flex-1 ml-64 p-10">
         <header class="mb-8 border-b border-gray-700 pb-4">
             <h2 class="text-4xl font-bold">F1 Academy Sponsors Management</h2>
-            <p class="text-gray-400">Add, update, and remove tracked sponsors.</p>
+            <p class="text-gray-400">Add, update, and remove tracked sponsors using real-world data.</p>
         </header>
 
         <?php echo $message; ?>
@@ -105,22 +139,37 @@ $sponsors = get_all_sponsors($conn);
                     <input type="hidden" name="sponsor_id" value="<?php echo htmlspecialchars($sponsor_to_edit['id']); ?>">
                 <?php endif; ?>
 
-                <input type="text" name="name" placeholder="Sponsor Name" required 
-                       value="<?php echo htmlspecialchars($sponsor_to_edit['name'] ?? ''); ?>"
-                       class="w-full p-3 border border-gray-600 bg-gray-900 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-hotpink">
+                <select name="name" required 
+                    class="w-full p-3 border border-gray-600 bg-gray-900 text-white rounded-md admin-select focus:outline-none focus:ring-2 focus:ring-hotpink">
+                    <option value="" disabled <?php echo $sponsor_to_edit ? '' : 'selected'; ?>>Select Sponsor Name</option>
+                    <?php foreach ($f1_title_sponsors as $sponsor_name): ?>
+                        <option value="<?php echo htmlspecialchars($sponsor_name); ?>"
+                            <?php echo (isset($sponsor_to_edit['name']) && $sponsor_to_edit['name'] === $sponsor_name) ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars($sponsor_name); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
 
                 <div class="grid grid-cols-2 gap-4">
-                    <input type="text" name="sector" placeholder="Sector (e.g., Energy Drink)" required 
-                           value="<?php echo htmlspecialchars($sponsor_to_edit['sector'] ?? ''); ?>"
-                           class="p-3 border border-gray-600 bg-gray-900 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-hotpink">
+                    <select name="sector" required 
+                        class="p-3 border border-gray-600 bg-gray-900 text-white rounded-md admin-select focus:outline-none focus:ring-2 focus:ring-hotpink">
+                        <option value="" disabled <?php echo $sponsor_to_edit ? '' : 'selected'; ?>>Select Sector</option>
+                        <?php foreach ($f1_sectors as $sector): ?>
+                            <option value="<?php echo htmlspecialchars($sector); ?>"
+                                <?php echo (isset($sponsor_to_edit['sector']) && $sponsor_to_edit['sector'] === $sector) ? 'selected' : ''; ?>>
+                                <?php echo htmlspecialchars($sector); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+
                     <input type="number" name="contract_value" placeholder="Contract Value (USD)" required 
-                           value="<?php echo htmlspecialchars($sponsor_to_edit['contract_value'] ?? ''); ?>"
-                           class="p-3 border border-gray-600 bg-gray-900 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-hotpink">
+                            value="<?php echo htmlspecialchars($sponsor_to_edit['contract_value'] ?? ''); ?>"
+                            class="p-3 border border-gray-600 bg-gray-900 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-hotpink">
                 </div>
 
-                <input type="text" name="logo_path" placeholder="Logo Path (e.g., image/RedBull.png)" 
-                       value="<?php echo htmlspecialchars($sponsor_to_edit['logo_path'] ?? ''); ?>"
-                       class="w-full p-3 border border-gray-600 bg-gray-900 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-hotpink">
+                <input type="text" name="logo_path" placeholder="Logo Path (e.g., image/Oracle.png)" 
+                        value="<?php echo htmlspecialchars($sponsor_to_edit['logo_path'] ?? ''); ?>"
+                        class="w-full p-3 border border-gray-600 bg-gray-900 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-hotpink">
 
                 <textarea name="details" placeholder="Sponsor Details/Description" rows="3" 
                           class="w-full p-3 border border-gray-600 bg-gray-900 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-hotpink"><?php echo htmlspecialchars($sponsor_to_edit['details'] ?? ''); ?></textarea>
@@ -131,8 +180,6 @@ $sponsors = get_all_sponsors($conn);
                 </button>
             </form>
         </div>
-
-
         <div class="bg-gray-800 rounded-xl overflow-x-auto shadow-lg">
             <h3 class="text-xl font-semibold p-4 border-b border-gray-700">Current Sponsors List (<?php echo count($sponsors); ?>)</h3>
             <table class="min-w-full table-auto text-left">

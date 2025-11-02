@@ -10,14 +10,30 @@ if (!isset($_SESSION['user_id'])) {
 $user_id = $_SESSION['user_id'];
 $message = "";
 
-// Team list standardized
+// Team list standardized (No Change)
 $f1_teams = [
     "Ferrari", "Mercedes", "Red Bull Racing", "McLaren", "Aston Martin", "Alpine", "Williams", "Kick Sauber", "RB Cash App"
 ];
 
-// Sponsor list standardized from f1academy.sql/sponsors table
+// ----------------------------------------------------------------------------------
+// CRITICAL FIX: Updated Sponsor list to reflect actual F1 Title Sponsors
+// ----------------------------------------------------------------------------------
 $f1_sponsors = [
-    "Red Bull", "Mercedes", "Ferrari", "McLaren"
+    'Oracle',
+    'HP (Hewlett-Packard)',
+    'PETRONAS',
+    'Visa',
+    'Cash App',
+    'Stake',
+    'Kick',
+    'MoneyGram',
+    'BWT',
+    'Aramco',
+    'Mastercard',
+    'Shell',
+    'Ineos',
+    'Red Bull GmbH',
+    'Cognizant'
 ];
 
 
@@ -36,15 +52,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile'])) {
     if (empty($new_fullname) || empty($new_email) || empty($new_nationality)) {
         $message = "<div class='text-red-500 font-bold'>Error: Full Name, Email, and Nationality fields cannot be empty.</div>";
     } else {
-        // Handle Team Request
+        // Handle Team Request (Logic remains correct)
         if (!empty($new_team) && in_array($new_team, $f1_teams)) {
-            // Set as request, admin needs to approve
             $team_request = $new_team;
         }
 
-        // Handle Sponsor Request
+        // Handle Sponsor Request (Logic remains correct, now using new $f1_sponsors list)
         if (!empty($new_sponsor) && in_array($new_sponsor, $f1_sponsors)) {
-            // Set as request, admin needs to approve
             $sponsor_request = $new_sponsor;
         }
 
@@ -57,7 +71,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile'])) {
             if ($team_request) {
                 $success_message .= " Team request for **$team_request** submitted for admin approval.";
             }
-             if ($sponsor_request) {
+            if ($sponsor_request) {
                 $success_message .= " Sponsor request for **$sponsor_request** submitted for admin approval.";
             }
             $message = "<div class='text-green-500 font-bold'>$success_message</div>";

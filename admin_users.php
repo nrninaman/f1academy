@@ -44,11 +44,11 @@ $users = get_all_users($conn);
     <aside class="w-64 bg-gray-800 h-screen fixed p-6">
         <h1 class="text-3xl font-extrabold mb-8 text-hotpink">Admin Panel</h1>
         <nav class="admin-nav space-y-4">
-            <a href="admin_dashboard.php" class="block text-lg font-bold text-white hover:text-hotpink">📊 Dashboard</a>
-            <a href="admin_users.php" class="block text-lg font-bold text-hotpink">👤 Users List</a>
-            <a href="admin_teams.php" class="block text-lg font-bold text-white hover:text-hotpink">🏎️ Teams List</a>
-            <a href="admin_sponsors.php" class="block text-lg font-bold text-white hover:text-hotpink">💰 Sponsors List</a>
-            <a href="logout.php" class="block text-lg font-bold text-white hover:text-red-500 pt-6">🚪 Logout</a>
+            <a href="admin_dashboard.php" class="block text-lg font-bold text-white hover:text-hotpink"> Dashboard</a>
+            <a href="admin_users.php" class="block text-lg font-bold text-hotpink"> Users List</a>
+            <a href="admin_teams.php" class="block text-lg font-bold text-white hover:text-hotpink"> Teams List</a>
+            <a href="admin_sponsors.php" class="block text-lg font-bold text-white hover:text-hotpink"> Sponsors List</a>
+            <a href="logout.php" class="block text-lg font-bold text-white hover:text-red-500 pt-6"> Logout</a>
         </nav>
     </aside>
 
