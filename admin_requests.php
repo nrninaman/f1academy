@@ -15,7 +15,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['approve_team'])) {
     $user_id = $_POST['user_id'];
     $team_name = $_POST['team_name'];
     if (approve_team_request($conn, $user_id, $team_name)) {
-        $message = "<div class='bg-green-500 text-white p-3 rounded-lg mb-4'>Team request for User ID $user_id (Team: $team_name) approved.</div>";
+        // FIX: Removed ** from notification
+        $message = "<div class='bg-green-500 text-white p-3 rounded-lg mb-4'>Team request for User ID $user_id (Team: <strong>$team_name</strong>) approved.</div>";
     } else {
         $message = "<div class='bg-red-500 text-white p-3 rounded-lg mb-4'>Error approving team request for User ID $user_id.</div>";
     }
@@ -26,7 +27,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['approve_sponsor'])) {
     $user_id = $_POST['user_id'];
     $sponsor_name = $_POST['sponsor_name'];
     if (approve_sponsor_request($conn, $user_id, $sponsor_name)) {
-        $message = "<div class='bg-green-500 text-white p-3 rounded-lg mb-4'>Sponsor request for User ID $user_id (Sponsor: $sponsor_name) approved.</div>";
+        // FIX: Removed ** from notification
+        $message = "<div class='bg-green-500 text-white p-3 rounded-lg mb-4'>Sponsor request for User ID $user_id (Sponsor: <strong>$sponsor_name</strong>) approved.</div>";
     } else {
         $message = "<div class='bg-red-500 text-white p-3 rounded-lg mb-4'>Error approving sponsor request for User ID $user_id.</div>";
     }
@@ -43,11 +45,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['approve_both'])) {
     $sponsor_success = approve_sponsor_request($conn, $user_id, $sponsor_name);
 
     if ($team_success && $sponsor_success) {
-        $message = "<div class='bg-green-500 text-white p-3 rounded-lg mb-4'>Both Team ($team_name) and Sponsor ($sponsor_name) requests for User ID $user_id approved.</div>";
+        $message = "<div class='bg-green-500 text-white p-3 rounded-lg mb-4'>Both Team (<strong>$team_name</strong>) and Sponsor (<strong>$sponsor_name</strong>) requests for User ID $user_id approved.</div>";
     } elseif ($team_success) {
-        $message = "<div class='bg-yellow-500 text-white p-3 rounded-lg mb-4'>Team ($team_name) approved, but an error occurred for Sponsor ($sponsor_name).</div>";
+        $message = "<div class='bg-yellow-500 text-white p-3 rounded-lg mb-4'>Team (<strong>$team_name</strong>) approved, but an error occurred for Sponsor ($sponsor_name).</div>";
     } elseif ($sponsor_success) {
-        $message = "<div class='bg-yellow-500 text-white p-3 rounded-lg mb-4'>Sponsor ($sponsor_name) approved, but an error occurred for Team ($team_name).</div>";
+        $message = "<div class='bg-yellow-500 text-white p-3 rounded-lg mb-4'>Sponsor (<strong>$sponsor_name</strong>) approved, but an error occurred for Team ($team_name).</div>";
     } else {
         $message = "<div class='bg-red-500 text-white p-3 rounded-lg mb-4'>Error approving both requests for User ID $user_id.</div>";
     }
@@ -135,13 +137,12 @@ $requests = get_pending_requests($conn);
                                 
                                 <td class="whitespace-nowrap flex space-x-2">
                                     <?php
-                                    // Helper variables for clarity
                                     $has_team_request = !empty($request['team_request']);
                                     $has_sponsor_request = !empty($request['sponsor_request']);
                                     ?>
 
                                     <?php if ($has_team_request): ?>
-                                        <form method="POST" class="inline-block" onsubmit="return confirm('Approve team **<?php echo $request['team_request']; ?>** for this user?');">
+                                        <form method="POST" class="inline-block" onsubmit="return confirm('Approve team <?php echo $request['team_request']; ?> for this user?');">
                                             <input type="hidden" name="user_id" value="<?php echo $request['id']; ?>">
                                             <input type="hidden" name="team_name" value="<?php echo $request['team_request']; ?>">
                                             <button type="submit" name="approve_team" class="text-xs bg-blue-600 hover:bg-blue-700 text-white py-1 px-3 rounded-lg font-bold transition duration-200">
@@ -151,7 +152,7 @@ $requests = get_pending_requests($conn);
                                     <?php endif; ?>
                                     
                                     <?php if ($has_sponsor_request): ?>
-                                        <form method="POST" class="inline-block" onsubmit="return confirm('Approve sponsor **<?php echo $request['sponsor_request']; ?>** for this user?');">
+                                        <form method="POST" class="inline-block" onsubmit="return confirm('Approve sponsor <?php echo $request['sponsor_request']; ?> for this user?');">
                                             <input type="hidden" name="user_id" value="<?php echo $request['id']; ?>">
                                             <input type="hidden" name="sponsor_name" value="<?php echo $request['sponsor_request']; ?>">
                                             <button type="submit" name="approve_sponsor" class="text-xs bg-indigo-600 hover:bg-indigo-700 text-white py-1 px-3 rounded-lg font-bold transition duration-200">
@@ -161,7 +162,7 @@ $requests = get_pending_requests($conn);
                                     <?php endif; ?>
 
                                      <?php if ($has_team_request && $has_sponsor_request): ?>
-                                        <form method="POST" class="inline-block" onsubmit="return confirm('Approve **BOTH** team (<?php echo $request['team_request']; ?>) and sponsor (<?php echo $request['sponsor_request']; ?>) for this user?');">
+                                        <form method="POST" class="inline-block" onsubmit="return confirm('Approve BOTH team (<?php echo $request['team_request']; ?>) and sponsor (<?php echo $request['sponsor_request']; ?>) for this user?');">
                                             <input type="hidden" name="user_id" value="<?php echo $request['id']; ?>">
                                             <input type="hidden" name="team_name" value="<?php echo $request['team_request']; ?>">
                                             <input type="hidden" name="sponsor_name" value="<?php echo $request['sponsor_request']; ?>">

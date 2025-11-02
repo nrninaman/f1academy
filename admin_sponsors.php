@@ -64,7 +64,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && (isset($_POST['add_sponsor']) || iss
 
     if (isset($_POST['add_sponsor'])) {
         if (insert_new_sponsor($conn, $name, $sector, $contract_value, $logo_path, $details)) {
-            $message = "<div class='bg-green-500 text-white p-3 rounded-lg mb-4'>Sponsor **$name** added successfully.</div>";
+            // FIX: Removed ** from notification
+            $message = "<div class='bg-green-500 text-white p-3 rounded-lg mb-4'>Sponsor <strong>$name</strong> added successfully.</div>";
         } else {
             $message = "<div class='bg-red-500 text-white p-3 rounded-lg mb-4'>Error adding sponsor.</div>";
         }

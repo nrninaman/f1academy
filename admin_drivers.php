@@ -30,22 +30,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && (isset($_POST['add_driver']) || isse
     $fullname = $_POST['fullname'];
     $team_name = $_POST['team_name'];
     $sponsor_name = $_POST['sponsor_name'] ?: NULL;
-    // Position is now derived from points, so we only pull points from the form
     $points = (int)$_POST['points'];
     $biography = $_POST['biography'];
     $image_path = $_POST['image_path'];
     
-    // Position is set to 0 initially for a new driver, it gets corrected immediately after.
     $standing_position = (int)($id ? get_driver_by_id($conn, $id)['standing_position'] : 0);
 
     if (isset($_POST['add_driver'])) {
         if (insert_new_driver($conn, $fullname, $team_name, $sponsor_name, $standing_position, $points, $biography, $image_path)) {
+            // FIX: Removed ** from notification
             $message = "<div class='bg-green-500 text-white p-3 rounded-lg mb-4'>Driver <strong>$fullname</strong> added successfully.</div>";
         } else {
             $message = "<div class='bg-red-500 text-white p-3 rounded-lg mb-4'>Error adding driver.</div>";
         }
     } elseif (isset($_POST['update_driver']) && $id) {
-        // Update driver points, biography, etc.
         if (update_driver($conn, $id, $fullname, $team_name, $sponsor_name, $standing_position, $points, $biography, $image_path)) {
             $message = "<div class='bg-green-500 text-white p-3 rounded-lg mb-4'>Driver ID $id updated successfully.</div>";
         } else {
@@ -53,7 +51,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && (isset($_POST['add_driver']) || isse
         }
     }
     
-    // CRITICAL: Recalculate standings immediately after ADD or UPDATE points
     if (isset($_POST['add_driver']) || isset($_POST['update_driver'])) {
         recalculate_overall_driver_standings($conn);
     }

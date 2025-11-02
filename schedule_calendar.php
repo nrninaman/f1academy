@@ -39,12 +39,28 @@ $month_name = date('F Y', $first_day_of_month);
 $day_of_week = (int)date('w', $first_day_of_month); // w returns 0 (Sun) to 6 (Sat)
 
 // Fetch all races
-$races = get_all_races($conn); // Fetches all races ordered by round_number
+$races = get_all_races($conn); 
+
+// Map race data including flag (based on Grand Prix name)
+$race_flags = [
+    'Australian Grand Prix' => '🇦🇺',
+    'Miami Grand Prix' => '🇺🇸',
+    'Monaco Grand Prix' => '🇲🇨',
+    'British Grand Prix' => '🇬🇧',
+    'Austrian Grand Prix' => '🇦🇹',
+    'Emilia-Romagna Grand Prix' => '🇮🇹',
+    'Chinese Grand Prix' => '🇨🇳',
+    'Japanese Grand Prix' => '🇯🇵',
+    'Bahrain Grand Prix' => '🇧🇭',
+    'Saudi Arabian Grand Prix' => '🇸🇦',
+    // Add more races and flags as needed
+];
 
 // Map races to an array keyed by "Y-m-d" for easy lookup
 $races_by_date = [];
 foreach ($races as $race) {
     $date_key = date('Y-m-d', strtotime($race['date']));
+    $race['flag'] = $race_flags[$race['name']] ?? '🏁';
     if (!isset($races_by_date[$date_key])) {
         $races_by_date[$date_key] = [];
     }
@@ -73,9 +89,8 @@ for ($day = 1; $day <= $number_of_days; $day++) {
 
     if (!empty($events)) {
         foreach ($events as $event) {
-            $status_class = $event['is_completed'] ? 'bg-green-600' : 'bg-blue-600';
-            $status_icon = $event['is_completed'] ? '🏁' : '🗓️';
-            $calendar_html .= "<div class='mt-1 text-xs font-medium {$status_class} p-1 rounded leading-none whitespace-nowrap overflow-hidden text-ellipsis' title='{$event['name']} - {$event['details']}'>$status_icon {$event['name']}</div>";
+            $status_class = $event['is_completed'] ? 'bg-green-600/70' : 'bg-blue-600/70';
+            $calendar_html .= "<div class='mt-1 text-xs font-medium {$status_class} p-1 rounded leading-none whitespace-nowrap overflow-hidden text-ellipsis' title='{$event['name']} - {$event['details']}'>{$event['flag']} <strong>{$event['name']}</strong></div>";
         }
     }
     
@@ -95,11 +110,18 @@ for ($day = 1; $day <= $number_of_days; $day++) {
             display: grid; 
             grid-template-columns: repeat(7, 1fr); 
             gap: 0;
-            border-top: 1px solid #4b5563; /* Gray-700 */
+            border-top: 1px solid #4b5563; 
+            border-left: 1px solid #4b5563; /* New left border for entire grid */
+        }
+        .calendar-grid > div {
+            border-left: none !important; /* Remove individual left borders to leave only the grid line */
+            border-top: none !important;
+            border-bottom: 1px solid #4b5563;
+            border-right: 1px solid #4b5563;
         }
         .day-label {
             padding: 10px;
-            background-color: #374151; /* Gray-700 */
+            background-color: #374151;
             font-weight: bold;
             text-align: center;
         }
@@ -110,7 +132,7 @@ for ($day = 1; $day <= $number_of_days; $day++) {
     <div class="max-w-5xl mx-auto">
         <header class="text-center mb-10">
             <h1 class="text-4xl font-bold text-hotpink">2025 F1 Academy Calendar</h1>
-            <p class="text-gray-400">All planned race events in a monthly view.</p>
+            <p class="text-gray-400">All planned race events in a monthly view. </p> 
         </header>
 
         <div class="bg-gray-800 rounded-xl shadow-2xl p-6">

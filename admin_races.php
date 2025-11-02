@@ -17,7 +17,9 @@ $race_results = [];
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['delete_race'])) {
     $race_id = $_POST['race_id'];
     if (delete_race_by_id($conn, $race_id)) {
+        // FIX: Removed ** from notification
         $message = "<div class='bg-green-500 text-white p-3 rounded-lg mb-4'>Race ID $race_id and all related results deleted successfully.</div>";
+        recalculate_overall_driver_standings($conn);
     } else {
         $message = "<div class='bg-red-500 text-white p-3 rounded-lg mb-4'>Error deleting Race ID $race_id.</div>";
     }
@@ -35,7 +37,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && (isset($_POST['add_race']) || isset(
 
     if (isset($_POST['add_race'])) {
         if (insert_new_race($conn, $name, $date, $details, $round_number)) {
-            $message = "<div class='bg-green-500 text-white p-3 rounded-lg mb-4'>Race **$name** added successfully as Round $round_number.</div>";
+            // FIX: Removed ** from notification
+            $message = "<div class='bg-green-500 text-white p-3 rounded-lg mb-4'>Race <strong>$name</strong> added successfully as Round $round_number.</div>";
         } else {
             $message = "<div class='bg-red-500 text-white p-3 rounded-lg mb-4'>Error adding race (Check DB constraints).</div>";
         }
@@ -45,9 +48,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && (isset($_POST['add_race']) || isset(
         } else {
             $message = "<div class='bg-red-500 text-white p-3 rounded-lg mb-4'>Error updating race ID $id.</div>";
         }
+        recalculate_overall_driver_standings($conn);
     }
 }
 
+// Handle Insert/Update Race Results Action
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_results'])) {
     $race_id = (int)$_POST['results_race_id'];
     $positions = $_POST['position'] ?? [];
@@ -66,10 +71,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_results'])) {
                 }
             }
         }
-        $message = "<div class='bg-green-500 text-white p-3 rounded-lg mb-4'>$success_count race results saved/updated for Race ID $race_id.</div>";
+        // FIX: Recalculate standings after results are saved
+        recalculate_overall_driver_standings($conn);
+        $message = "<div class='bg-green-500 text-white p-3 rounded-lg mb-4'>$success_count race results saved/updated for Race ID $race_id. Overall standings updated.</div>";
     }
 }
 
+// Handle Edit Fetch (Race & Results)
 if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['edit_id'])) {
     $race_to_edit = get_race_by_id($conn, $_GET['edit_id']);
     if ($race_to_edit) {

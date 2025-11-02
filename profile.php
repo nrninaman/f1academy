@@ -69,10 +69,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile'])) {
 
             $success_message = "Profile updated successfully!";
             if ($team_request) {
-                $success_message .= " Team request for **$team_request** submitted for admin approval.";
+                // FIX: Removed ** from notification
+                $success_message .= " Team request for <strong>$team_request</strong> submitted for admin approval.";
             }
             if ($sponsor_request) {
-                $success_message .= " Sponsor request for **$sponsor_request** submitted for admin approval.";
+                // FIX: Removed ** from notification
+                $success_message .= " Sponsor request for <strong>$sponsor_request</strong> submitted for admin approval.";
             }
             $message = "<div class='text-green-500 font-bold'>$success_message</div>";
 
@@ -157,7 +159,7 @@ $sponsor_request_status = $user['sponsor_request'] ?? "";
 
             <label for="team" class="block font-bold pt-4 text-gray-300">Current Assigned Team: <span class="text-hotpink"><?php echo htmlspecialchars($current_team); ?></span></label>
             <?php if ($team_request_status): ?>
-                <div class='text-yellow-500 font-bold'>**Pending Team Request: <?php echo htmlspecialchars($team_request_status); ?>**</div>
+                <div class='text-yellow-500 font-bold'>Pending Team Request: <strong><?php echo htmlspecialchars($team_request_status); ?></strong></div>
             <?php endif; ?>
             <select id="team" name="team"
                     class="w-full p-3 mt-1 box-border border border-gray-600 bg-black text-white rounded-md focus:outline-none focus:ring-2 focus:ring-hotpink">
@@ -171,7 +173,7 @@ $sponsor_request_status = $user['sponsor_request'] ?? "";
 
             <label for="sponsor" class="block font-bold pt-4 text-gray-300">Current Assigned Sponsor: <span class="text-hotpink"><?php echo htmlspecialchars($current_sponsor); ?></span></label>
             <?php if ($sponsor_request_status): ?>
-                <div class='text-yellow-500 font-bold'>**Pending Sponsor Request: <?php echo htmlspecialchars($sponsor_request_status); ?>**</div>
+                <div class='text-yellow-500 font-bold'>Pending Sponsor Request: <strong><?php echo htmlspecialchars($sponsor_request_status); ?></strong></div>
             <?php endif; ?>
             <select id="sponsor" name="sponsor"
                     class="w-full p-3 mt-1 box-border border border-gray-600 bg-black text-white rounded-md focus:outline-none focus:ring-2 focus:ring-hotpink">

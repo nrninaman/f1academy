@@ -79,7 +79,7 @@ if (isset($drivers[2])) { $podium_drivers[] = $drivers[2]; } // Data for P3 (Bro
                     <?php endif; ?>
                     
                     <h4 class="text-md md:text-xl font-bold <?php echo $text_color; ?> mt-1">
-                        <?php echo htmlspecialchars($driver['fullname']); ?>
+                        <strong><?php echo htmlspecialchars($driver['fullname']); ?></strong>
                     </h4>
                     <p class="text-xs <?php echo $text_color; ?> opacity-80"><?php echo htmlspecialchars($driver['team_name']); ?></p>
                 </div>
@@ -107,9 +107,9 @@ if (isset($drivers[2])) { $podium_drivers[] = $drivers[2]; } // Data for P3 (Bro
                                     <?php if ($driver['image_path']): ?>
                                         <img src="<?php echo htmlspecialchars($driver['image_path']); ?>" alt="<?php echo htmlspecialchars($driver['fullname']); ?>" class="w-10 h-10 object-cover rounded-full">
                                     <?php endif; ?>
-                                    <span class="font-medium text-white"><?php echo htmlspecialchars($driver['fullname']); ?></span>
+                                    <span class="font-medium text-white"><strong><?php echo htmlspecialchars($driver['fullname']); ?></strong></span>
                                 </td>
-                                <td class="p-3 text-gray-400"><?php echo htmlspecialchars($driver['team_name']); ?></td>
+                                <td class="p-3 text-gray-400"><strong><?php echo htmlspecialchars($driver['team_name']); ?></strong></td>
                                 <td class="p-3 text-right font-extrabold text-lg text-hotpink"><?php echo htmlspecialchars($driver['points']); ?></td>
                                 <td class="p-3">
                                     <a href="driver_details.php?id=<?php echo $driver['id']; ?>" class="text-hotpink hover:text-white text-xs font-bold transition duration-200">VIEW</a>

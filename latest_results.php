@@ -18,7 +18,8 @@ $results = $latest_results_data['results'];
     <header class="text-center mb-10">
         <h1 class="text-4xl font-bold text-hotpink">Latest Race Result</h1>
         <?php if ($race): ?>
-            <p class="text-2xl font-semibold mt-2"><?php echo htmlspecialchars($race['name']); ?> (Round <?php echo htmlspecialchars($race['round_number']); ?>)</p>
+            <p class="text-2xl font-semibold mt-2"><?php echo htmlspecialchars($race['name']); ?></p> 
+            <p class="text-lg text-gray-400 mt-1"><?php echo htmlspecialchars($race['details']); ?></p>
         <?php else: ?>
             <p class="text-2xl font-semibold mt-2 text-gray-400">No completed races found.</p>
         <?php endif; ?>
@@ -41,7 +42,7 @@ $results = $latest_results_data['results'];
                             <td class="p-3 font-extrabold text-hotpink"><?php echo htmlspecialchars($result['position']); ?></td>
                             <td class="p-3 flex items-center gap-3">
                                 <img src="<?php echo htmlspecialchars($result['image_path']); ?>" alt="Driver" class="w-8 h-8 rounded-full object-cover">
-                                <?php echo htmlspecialchars($result['fullname']); ?>
+                                <strong><?php echo htmlspecialchars($result['fullname']); ?></strong>
                             </td>
                             <td class="p-3 text-gray-400"><?php echo htmlspecialchars($result['team_name']); ?></td>
                             <td class="p-3 font-bold"><?php echo htmlspecialchars($result['points']); ?></td>

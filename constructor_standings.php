@@ -72,7 +72,7 @@ if (isset($teams[2])) { $podium_teams[] = $teams[2]; } // Data for P3 (Bronze Bo
                     <div class="h-px w-2/3 mx-auto my-2 <?php echo ($current_rank === 1) ? 'bg-gray-900' : 'bg-white/50'; ?>"></div>
                     
                     <h4 class="text-md md:text-xl font-bold <?php echo $text_color; ?> mt-1">
-                        <?php echo htmlspecialchars($team['team_name']); ?>
+                        <strong><?php echo htmlspecialchars($team['team_name']); ?></strong>
                     </h4>
                     
                     <?php if ($team['logo_path']): ?>
@@ -101,7 +101,7 @@ if (isset($teams[2])) { $podium_teams[] = $teams[2]; } // Data for P3 (Bronze Bo
                                     <?php if ($team['logo_path']): ?>
                                         <img src="<?php echo htmlspecialchars($team['logo_path']); ?>" alt="<?php echo htmlspecialchars($team['team_name']); ?>" class="w-10 h-10 object-contain">
                                     <?php endif; ?>
-                                    <span class="font-medium text-white"><?php echo htmlspecialchars($team['team_name']); ?></span>
+                                    <span class="font-medium text-white"><strong><?php echo htmlspecialchars($team['team_name']); ?></strong></span>
                                 </td>
                                 <td class="p-3 text-right font-extrabold text-lg text-hotpink"><?php echo htmlspecialchars($team['total_points']); ?></td>
                             </tr>
