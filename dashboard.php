@@ -85,7 +85,7 @@ $all_teams = get_all_teams($conn);
         <div class="dropdown relative">
             <a href="#" class="text-white font-bold cursor-pointer transition duration-300 flex items-center gap-1 hover:text-hotpink">Schedule <span class="arrow text-xs">▼</span></a>
             <div class="dropdown-content bg-gray-900 border border-gray-700 rounded-xl shadow-lg text-center min-w-[300px]">
-                <a href="schedule_calendar.php" class="block p-2 hover:bg-gray-800 rounded-lg">🗓️ 2025 Calendar (Yearly View)</a>
+                <a href="schedule_calendar.php" class="block p-2 hover:bg-gray-800 rounded-lg">🗓️ 2025 Calendar (Monthly View)</a>
                 <a href="race_weekends.php" class="block p-2 hover:bg-gray-800 rounded-lg">🏁 Race Weekends (Details)</a>
             </div>
         </div>
@@ -95,7 +95,7 @@ $all_teams = get_all_teams($conn);
             <div class="dropdown-content bg-gray-900 border border-gray-700 rounded-xl shadow-lg text-center min-w-[300px]">
                 <a href="latest_results.php" class="block p-2 hover:bg-gray-800 rounded-lg">🏆 Latest Race Result</a>
                 <a href="driver_standings.php" class="block p-2 hover:bg-gray-800 rounded-lg">🔢 Driver Standings</a>
-                <a href="constructor_standings.php" class="block p-2 hover:bg-gray-800 rounded-lg">⚙️ Constructor Standings</a>
+                <a href="constructor_standings.php" class="block p-2 hover:bg-gray-800 rounded-lg">🏆 Coach Ranking (Team)</a>
             </div>
         </div>
 

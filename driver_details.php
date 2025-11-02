@@ -31,11 +31,11 @@ if ($driver_id) {
                 <h2 class="text-4xl font-extrabold mb-2"><?php echo htmlspecialchars($driver['fullname']); ?></h2>
                 <p class="text-xl text-gray-400 mb-4">Position: <span class="text-hotpink">#<?php echo htmlspecialchars($driver['standing_position']); ?></span> | Points: <span class="text-hotpink"><?php echo htmlspecialchars($driver['points']); ?></span></p>
                 
-                <p class="text-lg font-semibold mt-4">**Team:** <span class="text-white"><?php echo htmlspecialchars($driver['team_name']); ?></span></p>
-                <p class="text-lg font-semibold">**Sponsor:** <span class="text-white"><?php echo htmlspecialchars($driver['sponsor_name'] ?? 'N/A'); ?></span></p>
+                <p class="text-lg font-semibold mt-4"><strong class="text-gray-300">Team:</strong> <span class="text-white"><?php echo htmlspecialchars($driver['team_name']); ?></span></p>
+                <p class="text-lg font-semibold"><strong class="text-gray-300">Sponsor:</strong> <span class="text-white"><?php echo htmlspecialchars($driver['sponsor_name'] ?? 'N/A'); ?></span></p>
 
                 <p class="text-md mt-6 border-t border-gray-700 pt-4">
-                    **Biography:** <br>
+                    <strong class="text-gray-300">Biography:</strong> <br>
                     <?php echo nl2br(htmlspecialchars($driver['biography'] ?? 'No biography available.')); ?>
                 </p>
             </div>

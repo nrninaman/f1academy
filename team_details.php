@@ -57,8 +57,8 @@ $text_color = ($team_name == 'Kick Sauber') ? 'text-black' : 'text-white';
                 </div>
                 <div>
                     <h2 class="text-3xl font-bold mb-4">Team Info</h2>
-                    <p class="text-lg">**Base Country:** <span class="text-main-color"><?php echo htmlspecialchars($team['base_country']); ?></span></p>
-                    <p class="text-lg">**Engine Supplier:** <span class="text-main-color"><?php echo htmlspecialchars($team['engine_supplier']); ?></span></p>
+                    <p class="text-lg"><strong class="text-gray-300">Base Country:</strong> <span class="text-main-color"><?php echo htmlspecialchars($team['base_country']); ?></span></p>
+                    <p class="text-lg"><strong class="text-gray-300">Engine Supplier:</strong> <span class="text-main-color"><?php echo htmlspecialchars($team['engine_supplier']); ?></span></p>
                     <img src="<?php echo htmlspecialchars($team['logo_path']); ?>" alt="<?php echo htmlspecialchars($team['name']); ?> Logo" class="w-24 h-auto mt-4 object-contain">
                 </div>
             </div>

@@ -29,14 +29,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && (isset($_POST['add_race']) || isset(
     $name = $_POST['name'];
     $date = $_POST['date'];
     $details = $_POST['details'];
-    $round_number = (int)$_POST['round_number'];
     $is_completed = isset($_POST['is_completed']) ? 1 : 0;
+
+    // OBJECTIVE 2: Races and Results (remove rounds)
+    // Automatically calculate the required round_number for new races based on the maximum existing value + 1.
+    // For updates, the hidden field retains the existing round_number.
+    $round_number = (int)($id ? $_POST['round_number'] : $conn->query("SELECT MAX(round_number) FROM races")->fetch_row()[0] + 1);
 
     if (isset($_POST['add_race'])) {
         if (insert_new_race($conn, $name, $date, $details, $round_number)) {
-            $message = "<div class='bg-green-500 text-white p-3 rounded-lg mb-4'>Race **$name** added successfully.</div>";
+            $message = "<div class='bg-green-500 text-white p-3 rounded-lg mb-4'>Race **$name** added successfully as Round $round_number.</div>";
         } else {
-            $message = "<div class='bg-red-500 text-white p-3 rounded-lg mb-4'>Error adding race (Check for duplicate round number).</div>";
+            $message = "<div class='bg-red-500 text-white p-3 rounded-lg mb-4'>Error adding race (Check DB constraints).</div>";
         }
     } elseif (isset($_POST['update_race']) && $id) {
         if (update_race($conn, $id, $name, $date, $details, $round_number, $is_completed)) {
@@ -60,7 +64,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_results'])) {
             $position = (int)$positions[$key];
             $point = (int)$points[$key];
 
-            // Only save if position is set (implies a result was entered)
             if ($position > 0) {
                 if (insert_or_update_race_result($conn, $race_id, $driver_id, $position, $point)) {
                     $success_count++;
@@ -76,7 +79,6 @@ if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['edit_id'])) {
     $race_to_edit = get_race_by_id($conn, $_GET['edit_id']);
     if ($race_to_edit) {
         $race_results = get_race_results($conn, $race_to_edit['id']);
-        // Reformat results to be easily keyed by driver_id for the form
         $results_map = [];
         foreach ($race_results as $result) {
             $results_map[$result['driver_id']] = ['position' => $result['position'], 'points' => $result['points']];
@@ -133,33 +135,30 @@ $races = get_all_races($conn);
             <form method="POST" action="admin_races.php" class="space-y-4">
                 <?php if ($race_to_edit): ?>
                     <input type="hidden" name="race_id" value="<?php echo htmlspecialchars($race_to_edit['id']); ?>">
+                    <input type="hidden" name="round_number" value="<?php echo htmlspecialchars($race_to_edit['round_number']); ?>">
                 <?php endif; ?>
 
                 <input type="text" name="name" placeholder="Race Name (e.g., British Grand Prix)" required 
                        value="<?php echo htmlspecialchars($race_to_edit['name'] ?? ''); ?>"
                        class="form-input">
 
-                <div class="grid grid-cols-3 gap-4">
+                <div class="grid grid-cols-2 gap-4">
                     <div class="space-y-1">
                         <label for="date" class="text-sm text-gray-400 block text-left">Date</label>
                         <input type="date" id="date" name="date" required 
                             value="<?php echo htmlspecialchars($race_to_edit['date'] ?? ''); ?>"
                             class="form-input">
                     </div>
-                    <div class="space-y-1">
-                        <label for="round_number" class="text-sm text-gray-400 block text-left">Round #</label>
-                        <input type="number" id="round_number" name="round_number" placeholder="Round Number" required 
-                            value="<?php echo htmlspecialchars($race_to_edit['round_number'] ?? ''); ?>"
-                            class="form-input">
-                    </div>
+                    
                     <div class="space-y-1 pt-6 flex items-center justify-center">
                         <input type="checkbox" id="is_completed" name="is_completed" value="1"
                             <?php echo ($race_to_edit['is_completed'] ?? 0) ? 'checked' : ''; ?>
                             class="h-5 w-5 text-hotpink border-gray-600 rounded focus:ring-hotpink">
                         <label for="is_completed" class="ml-2 text-sm text-white">Race Completed</label>
                     </div>
+                    
                 </div>
-
+                
                 <textarea name="details" placeholder="Race Details (e.g., Race held at Silverstone)" rows="3" 
                           class="form-input"><?php echo htmlspecialchars($race_to_edit['details'] ?? ''); ?></textarea>
 
@@ -223,7 +222,7 @@ $races = get_all_races($conn);
             <table class="min-w-full table-auto text-left">
                 <thead>
                     <tr class="bg-gray-700 text-sm uppercase">
-                        <th class="p-3">Round</th>
+                        <th class="p-3">ID</th>
                         <th class="p-3">Name</th>
                         <th class="p-3">Date</th>
                         <th class="p-3">Status</th>
@@ -234,7 +233,7 @@ $races = get_all_races($conn);
                     <?php if (!empty($races)): ?>
                         <?php foreach ($races as $race): ?>
                             <tr class="hover:bg-gray-700 text-sm">
-                                <td><?php echo htmlspecialchars($race['round_number']); ?></td>
+                                <td><?php echo htmlspecialchars($race['id']); ?></td>
                                 <td><?php echo htmlspecialchars($race['name']); ?></td>
                                 <td><?php echo date('M d, Y', strtotime($race['date'])); ?></td>
                                 <td><span class="px-2 py-1 rounded-full text-xs font-semibold <?php echo $race['is_completed'] ? 'bg-green-600' : 'bg-blue-600'; ?>"><?php echo $race['is_completed'] ? 'Completed' : 'Upcoming'; ?></span></td>
