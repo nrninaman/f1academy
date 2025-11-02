@@ -207,6 +207,7 @@ function delete_sponsor_by_id($conn, $id) {
 }
 
 function get_all_drivers($conn) {
+    // Ordering by points DESC for the admin table where POS is manually displayed
     $query = "SELECT * FROM drivers ORDER BY points DESC";
     $result = $conn->query($query);
     $data = [];
@@ -250,6 +251,39 @@ function delete_driver_by_id($conn, $id) {
     return $success;
 }
 
+/**
+ * NEW FUNCTION: Recalculates overall driver points and standing_position from completed races.
+ */
+function recalculate_overall_driver_standings($conn) {
+    // 1. Reset and calculate total points for each driver from all completed races
+    $point_calculation_query = "
+        UPDATE drivers d
+        SET d.points = COALESCE((
+            SELECT SUM(r.points)
+            FROM results r
+            JOIN races rc ON r.race_id = rc.id
+            WHERE r.driver_id = d.id AND rc.is_completed = 1
+        ), 0)
+    ";
+    $conn->query($point_calculation_query);
+
+    // 2. Recalculate and update standing positions based on new total points
+    // Using a JOIN with a subquery to simulate ranking without multi_query
+    $rank_update_query = "
+        UPDATE drivers d
+        JOIN (
+            SELECT id, @rank := @rank + 1 AS new_rank
+            FROM drivers, (SELECT @rank := 0) r
+            ORDER BY points DESC, fullname ASC
+        ) ranked_drivers
+        ON d.id = ranked_drivers.id
+        SET d.standing_position = ranked_drivers.new_rank;
+    ";
+    $conn->query($rank_update_query);
+
+    return true;
+}
+
 function get_all_races($conn) {
     $query = "SELECT * FROM races ORDER BY round_number ASC";
     $result = $conn->query($query);
@@ -287,7 +321,6 @@ function update_race($conn, $id, $name, $date, $details, $round_number, $is_comp
 }
 
 function delete_race_by_id($conn, $id) {
-    // Deleting a race will cascade and delete all related results due to FOREIGN KEY ON DELETE CASCADE (as per f1academy.sql)
     $stmt = $conn->prepare("DELETE FROM races WHERE id = ?");
     $stmt->bind_param("i", $id);
     $success = $stmt->execute();
@@ -295,7 +328,10 @@ function delete_race_by_id($conn, $id) {
     return $success;
 }
 
-function get_race_results($conn, $race_id) {
+/**
+ * Fetches race-specific results (Race Standings).
+ */
+function get_race_standings_data($conn, $race_id) {
     $stmt = $conn->prepare("
         SELECT 
             r.position, r.points, d.fullname, d.team_name, d.image_path, d.id AS driver_id
@@ -339,18 +375,20 @@ function get_driver_standings_data($conn) {
         FROM 
             drivers d
         ORDER BY 
-            d.standing_position ASC, d.points DESC
+            d.points DESC, d.standing_position ASC, d.fullname ASC
     ";
     $result = $conn->query($query);
     $data = [];
+    $rank = 1; 
     while ($row = $result->fetch_assoc()) {
+        $row['standing_position'] = $rank++; 
         $data[] = $row;
     }
     return $data;
 }
 
 function get_latest_race_result($conn) {
-    $race_query = "SELECT id, name, round_number FROM races WHERE is_completed = TRUE ORDER BY round_number DESC LIMIT 1";
+    $race_query = "SELECT id, name, round_number, date, details FROM races WHERE is_completed = TRUE ORDER BY round_number DESC LIMIT 1";
     $race_result = $conn->query($race_query);
     $latest_race = $race_result->fetch_assoc();
 
@@ -359,7 +397,7 @@ function get_latest_race_result($conn) {
     }
 
     $race_id = $latest_race['id'];
-    $results = get_race_results($conn, $race_id);
+    $results = get_race_standings_data($conn, $race_id);
 
     return ['race' => $latest_race, 'results' => $results];
 }

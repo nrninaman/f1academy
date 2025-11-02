@@ -31,9 +31,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && (isset($_POST['add_race']) || isset(
     $details = $_POST['details'];
     $is_completed = isset($_POST['is_completed']) ? 1 : 0;
 
-    // OBJECTIVE 2: Races and Results (remove rounds)
-    // Automatically calculate the required round_number for new races based on the maximum existing value + 1.
-    // For updates, the hidden field retains the existing round_number.
     $round_number = (int)($id ? $_POST['round_number'] : $conn->query("SELECT MAX(round_number) FROM races")->fetch_row()[0] + 1);
 
     if (isset($_POST['add_race'])) {
@@ -51,7 +48,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && (isset($_POST['add_race']) || isset(
     }
 }
 
-// Handle Insert/Update Race Results Action
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_results'])) {
     $race_id = (int)$_POST['results_race_id'];
     $positions = $_POST['position'] ?? [];
@@ -74,7 +70,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_results'])) {
     }
 }
 
-// Handle Edit Fetch (Race & Results)
 if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['edit_id'])) {
     $race_to_edit = get_race_by_id($conn, $_GET['edit_id']);
     if ($race_to_edit) {

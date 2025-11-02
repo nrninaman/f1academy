@@ -18,6 +18,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['delete_driver'])) {
     $driver_id = $_POST['driver_id'];
     if (delete_driver_by_id($conn, $driver_id)) {
         $message = "<div class='bg-green-500 text-white p-3 rounded-lg mb-4'>Driver ID $driver_id deleted successfully.</div>";
+        recalculate_overall_driver_standings($conn);
     } else {
         $message = "<div class='bg-red-500 text-white p-3 rounded-lg mb-4'>Error deleting Driver ID $driver_id. (Ensure no race results are linked)</div>";
     }
@@ -29,23 +30,32 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && (isset($_POST['add_driver']) || isse
     $fullname = $_POST['fullname'];
     $team_name = $_POST['team_name'];
     $sponsor_name = $_POST['sponsor_name'] ?: NULL;
-    $standing_position = (int)$_POST['standing_position'];
+    // Position is now derived from points, so we only pull points from the form
     $points = (int)$_POST['points'];
     $biography = $_POST['biography'];
     $image_path = $_POST['image_path'];
+    
+    // Position is set to 0 initially for a new driver, it gets corrected immediately after.
+    $standing_position = (int)($id ? get_driver_by_id($conn, $id)['standing_position'] : 0);
 
     if (isset($_POST['add_driver'])) {
         if (insert_new_driver($conn, $fullname, $team_name, $sponsor_name, $standing_position, $points, $biography, $image_path)) {
-            $message = "<div class='bg-green-500 text-white p-3 rounded-lg mb-4'>Driver **$fullname** added successfully.</div>";
+            $message = "<div class='bg-green-500 text-white p-3 rounded-lg mb-4'>Driver <strong>$fullname</strong> added successfully.</div>";
         } else {
             $message = "<div class='bg-red-500 text-white p-3 rounded-lg mb-4'>Error adding driver.</div>";
         }
     } elseif (isset($_POST['update_driver']) && $id) {
+        // Update driver points, biography, etc.
         if (update_driver($conn, $id, $fullname, $team_name, $sponsor_name, $standing_position, $points, $biography, $image_path)) {
             $message = "<div class='bg-green-500 text-white p-3 rounded-lg mb-4'>Driver ID $id updated successfully.</div>";
         } else {
             $message = "<div class='bg-red-500 text-white p-3 rounded-lg mb-4'>Error updating driver ID $id.</div>";
         }
+    }
+    
+    // CRITICAL: Recalculate standings immediately after ADD or UPDATE points
+    if (isset($_POST['add_driver']) || isset($_POST['update_driver'])) {
+        recalculate_overall_driver_standings($conn);
     }
 }
 
@@ -54,7 +64,7 @@ if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['edit_id'])) {
     $driver_to_edit = get_driver_by_id($conn, $_GET['edit_id']);
 }
 
-// Fetch all drivers
+// Fetch all drivers (now ordered by updated points)
 $drivers = get_all_drivers($conn);
 ?>
 
@@ -101,6 +111,7 @@ $drivers = get_all_drivers($conn);
             <form method="POST" action="admin_drivers.php" class="space-y-4">
                 <?php if ($driver_to_edit): ?>
                     <input type="hidden" name="driver_id" value="<?php echo htmlspecialchars($driver_to_edit['id']); ?>">
+                    <input type="hidden" name="standing_position" value="<?php echo htmlspecialchars($driver_to_edit['standing_position']); ?>">
                 <?php endif; ?>
 
                 <input type="text" name="fullname" placeholder="Full Name" required 
@@ -111,9 +122,11 @@ $drivers = get_all_drivers($conn);
                           class="w-full p-3 border border-gray-600 bg-gray-900 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-hotpink"><?php echo htmlspecialchars($driver_to_edit['biography'] ?? ''); ?></textarea>
 
                 <div class="grid grid-cols-3 gap-4">
-                    <input type="number" name="standing_position" placeholder="Standing Position" required
-                           value="<?php echo htmlspecialchars($driver_to_edit['standing_position'] ?? ''); ?>"
-                           class="p-3 border border-gray-600 bg-gray-900 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-hotpink">
+                    
+                    <input type="text" name="display_position" placeholder="Position (Calculated)" readonly disabled
+                           value="<?php echo htmlspecialchars($driver_to_edit['standing_position'] ?? 'N/A'); ?>"
+                           class="p-3 border border-gray-600 bg-gray-700 text-white rounded-md opacity-75">
+
                     <input type="number" name="points" placeholder="Points" required
                            value="<?php echo htmlspecialchars($driver_to_edit['points'] ?? ''); ?>"
                            class="p-3 border border-gray-600 bg-gray-900 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-hotpink">
@@ -155,7 +168,6 @@ $drivers = get_all_drivers($conn);
             <table class="min-w-full table-auto text-left">
                 <thead>
                     <tr class="bg-gray-700 text-sm uppercase">
-                        <th class="p-3">ID</th>
                         <th class="p-3">POS</th>
                         <th class="p-3">Name</th>
                         <th class="p-3">Team</th>
@@ -168,7 +180,6 @@ $drivers = get_all_drivers($conn);
                         <?php $num = 1 ?>
                         <?php foreach ($drivers as $driver): ?>
                             <tr class="hover:bg-gray-700 text-sm">
-                                <td><?php echo htmlspecialchars($driver['id']); ?></td>
                                 <td><?php echo $num++; ?></td>
                                 <td><?php echo htmlspecialchars($driver['fullname']); ?></td>
                                 <td><?php echo htmlspecialchars($driver['team_name']); ?></td>
@@ -187,7 +198,7 @@ $drivers = get_all_drivers($conn);
                             </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
-                        <tr><td colspan="6" class="text-center py-4 text-gray-400">No drivers found.</td></tr>
+                        <tr><td colspan="5" class="text-center py-4 text-gray-400">No drivers found.</td></tr>
                     <?php endif; ?>
                 </tbody>
             </table>
