@@ -127,12 +127,19 @@ function delete_user_by_id($conn, $id) {
     return $success;
 }
 
+/**
+ * FIXED (N+1 Optimization): Rewritten to use LEFT JOIN/GROUP BY to fetch driver count in one query 
+ * instead of generating N+1 queries.
+ */
 function get_all_teams($conn) {
-    $query = "SELECT * FROM teams";
+    $query = "SELECT t.*, COUNT(d.id) as driver_count 
+              FROM teams t 
+              LEFT JOIN drivers d ON t.name = d.team_name 
+              GROUP BY t.id
+              ORDER BY t.id ASC";
     $result = $conn->query($query);
     $data = [];
     while ($row = $result->fetch_assoc()) {
-        $row['driver_count'] = $conn->query("SELECT COUNT(*) FROM drivers WHERE team_name = '{$row['name']}'")->fetch_row()[0];
         $data[] = $row;
     }
     return $data;
@@ -252,7 +259,7 @@ function delete_driver_by_id($conn, $id) {
 }
 
 /**
- * NEW FUNCTION: Recalculates overall driver points and standing_position from completed races.
+ * Recalculates overall driver points and standing_position from completed races.
  */
 function recalculate_overall_driver_standings($conn) {
     // 1. Reset and calculate total points for each driver from all completed races
@@ -329,6 +336,32 @@ function delete_race_by_id($conn, $id) {
 }
 
 /**
+ * FIXED (Missing Component): Function added to retrieve raw race results (driver_id, position, points) 
+ * needed for pre-filling the edit form in admin_races.php.
+ */
+function get_race_results($conn, $race_id) {
+    $stmt = $conn->prepare("
+        SELECT 
+            r.position, r.points, r.driver_id
+        FROM 
+            results r
+        WHERE 
+            r.race_id = ?
+        ORDER BY 
+            r.position ASC
+    ");
+    $stmt->bind_param("i", $race_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $data = [];
+    while ($row = $result->fetch_assoc()) {
+        $data[] = $row;
+    }
+    $stmt->close();
+    return $data;
+}
+
+/**
  * Fetches race-specific results (Race Standings).
  */
 function get_race_standings_data($conn, $race_id) {
@@ -379,16 +412,20 @@ function get_driver_standings_data($conn) {
     ";
     $result = $conn->query($query);
     $data = [];
-    $rank = 1; 
+    // REMOVED: The unnecessary $rank = 1; variable
     while ($row = $result->fetch_assoc()) {
-        $row['standing_position'] = $rank++; 
+        // REMOVED: The unnecessary $row['standing_position'] = $rank++; assignment
         $data[] = $row;
     }
     return $data;
 }
 
+/**
+ * FIXED (latest_results.php update): Updated ORDER BY clause from round_number to date to correctly show the chronologically 
+ * latest completed race.
+ */
 function get_latest_race_result($conn) {
-    $race_query = "SELECT id, name, round_number, date, details FROM races WHERE is_completed = TRUE ORDER BY round_number DESC LIMIT 1";
+    $race_query = "SELECT id, name, round_number, date, details FROM races WHERE is_completed = TRUE ORDER BY date DESC LIMIT 1";
     $race_result = $conn->query($race_query);
     $latest_race = $race_result->fetch_assoc();
 

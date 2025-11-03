@@ -8,16 +8,31 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     exit();
 }
 
+// --- F1 2024+ Point System ---
+// Array where the key is the position (1-10) and the value is the points awarded.
+$F1_RACE_POINTS = [
+    1 => 25,
+    2 => 18,
+    3 => 15,
+    4 => 12,
+    5 => 10,
+    6 => 8,
+    7 => 6,
+    8 => 4,
+    9 => 2,
+    10 => 1
+    // Positions 11+ get 0 points
+];
+
 $message = "";
 $race_to_edit = null;
 $drivers = get_all_drivers($conn); // Get all drivers for results form
 $race_results = [];
 
-// Handle Delete Race Action
+// Handle Delete Race Action (Logic Unchanged)
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['delete_race'])) {
     $race_id = $_POST['race_id'];
     if (delete_race_by_id($conn, $race_id)) {
-        // FIX: Removed ** from notification
         $message = "<div class='bg-green-500 text-white p-3 rounded-lg mb-4'>Race ID $race_id and all related results deleted successfully.</div>";
         recalculate_overall_driver_standings($conn);
     } else {
@@ -25,7 +40,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['delete_race'])) {
     }
 }
 
-// Handle Insert/Update Race Action
+// Handle Insert/Update Race Action (Logic Unchanged)
 if ($_SERVER["REQUEST_METHOD"] == "POST" && (isset($_POST['add_race']) || isset($_POST['update_race']))) {
     $id = isset($_POST['race_id']) ? $_POST['race_id'] : null;
     $name = $_POST['name'];
@@ -37,7 +52,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && (isset($_POST['add_race']) || isset(
 
     if (isset($_POST['add_race'])) {
         if (insert_new_race($conn, $name, $date, $details, $round_number)) {
-            // FIX: Removed ** from notification
             $message = "<div class='bg-green-500 text-white p-3 rounded-lg mb-4'>Race <strong>$name</strong> added successfully as Round $round_number.</div>";
         } else {
             $message = "<div class='bg-red-500 text-white p-3 rounded-lg mb-4'>Error adding race (Check DB constraints).</div>";
@@ -52,28 +66,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && (isset($_POST['add_race']) || isset(
     }
 }
 
-// Handle Insert/Update Race Results Action
+// Handle Insert/Update Race Results Action (Point Calculation Implemented)
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_results'])) {
     $race_id = (int)$_POST['results_race_id'];
     $positions = $_POST['position'] ?? [];
-    $points = $_POST['points'] ?? [];
     $driver_ids = $_POST['driver_id'] ?? [];
     $success_count = 0;
 
     if ($race_id) {
         foreach ($driver_ids as $key => $driver_id) {
             $position = (int)$positions[$key];
-            $point = (int)$points[$key];
+            
+            // --- POINT CALCULATION LOGIC ---
+            // If position is 1-10, get points from array; otherwise, points are 0.
+            $point = $F1_RACE_POINTS[$position] ?? 0;
 
             if ($position > 0) {
+                // Now insert/update result with the calculated points
                 if (insert_or_update_race_result($conn, $race_id, $driver_id, $position, $point)) {
                     $success_count++;
                 }
             }
         }
-        // FIX: Recalculate standings after results are saved
+        // Recalculate standings after results are saved
         recalculate_overall_driver_standings($conn);
-        $message = "<div class='bg-green-500 text-white p-3 rounded-lg mb-4'>$success_count race results saved/updated for Race ID $race_id. Overall standings updated.</div>";
+        $message = "<div class='bg-green-500 text-white p-3 rounded-lg mb-4'>$success_count race results saved/updated for Race ID $race_id. Overall standings updated. (Points Calculated Automatically)</div>";
     }
 }
 
@@ -84,6 +101,7 @@ if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['edit_id'])) {
         $race_results = get_race_results($conn, $race_to_edit['id']);
         $results_map = [];
         foreach ($race_results as $result) {
+            // Note: We map the position only, as points are now derived from position.
             $results_map[$result['driver_id']] = ['position' => $result['position'], 'points' => $result['points']];
         }
         $race_results = $results_map;
@@ -107,6 +125,17 @@ $races = get_all_races($conn);
         .admin-nav a:hover { color: hotpink; }
         th, td { padding: 12px; border-bottom: 1px solid #374151; }
         .form-input { padding: 10px; border-radius: 6px; border: 1px solid #4b5563; background-color: #1f2937; color: white; width: 100%; box-sizing: border-box; }
+        .points-display { background-color: #374151; color: #FF69B4; font-weight: bold; padding: 10px; border-radius: 6px; border: 1px solid #4b5563; text-align: center; }
+        
+        /* FIX: Ensure consistent vertical alignment in table cells */
+        .results-table th, .results-table td {
+            vertical-align: middle; /* Align content vertically in the middle */
+        }
+        .results-table .driver-cell {
+            display: flex;
+            align-items: center; /* Vertically center image and text */
+            gap: 12px; /* Space between image and text */
+        }
     </style>
 </head>
 <body class="bg-gray-900 text-white font-sans flex">
@@ -175,37 +204,45 @@ $races = get_all_races($conn);
         <?php if ($race_to_edit): ?>
         <div class="bg-gray-800 p-6 rounded-xl shadow-lg mb-8">
             <h3 class="text-2xl font-semibold mb-4 text-hotpink">Edit Results for: <?php echo htmlspecialchars($race_to_edit['name']); ?></h3>
+            <p class="text-sm text-gray-400 mb-4">Points are calculated automatically based on F1 rules (P1=25, P2=18, ..., P10=1).</p>
             <form method="POST" action="admin_races.php" class="space-y-4">
                 <input type="hidden" name="results_race_id" value="<?php echo htmlspecialchars($race_to_edit['id']); ?>">
                 
                 <div class="overflow-x-auto">
-                    <table class="min-w-full table-auto text-left">
+                    <table class="min-w-full table-auto text-left results-table">
                         <thead>
                             <tr class="bg-gray-700 text-sm uppercase">
                                 <th class="p-3 w-1/3">Driver</th>
-                                <th class="p-3 w-1/3">Position</th>
-                                <th class="p-3 w-1/3">Points</th>
+                                <th class="p-3 w-1/4">Position (1-<?php echo count($drivers); ?>)</th>
+                                <th class="p-3 w-1/4">Calculated Points</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php foreach ($drivers as $driver): 
-                                $current_result = $race_results[$driver['id']] ?? ['position' => '', 'points' => ''];
+                                $current_result = $race_results[$driver['id']] ?? ['position' => '', 'points' => 0];
+                                
+                                // Calculate points in the frontend for display only
+                                $display_points = $F1_RACE_POINTS[(int)$current_result['position']] ?? 0;
                             ?>
                                 <tr class="hover:bg-gray-700 text-sm">
-                                    <td class="p-3 flex items-center gap-3 font-semibold">
-                                        <img src="<?php echo htmlspecialchars($driver['image_path']); ?>" alt="Driver" class="w-6 h-6 rounded-full object-cover">
-                                        <?php echo htmlspecialchars($driver['fullname']); ?> (<?php echo htmlspecialchars($driver['team_name']); ?>)
-                                        <input type="hidden" name="driver_id[]" value="<?php echo htmlspecialchars($driver['id']); ?>">
+                                    <td class="p-3 font-semibold">
+                                        <div class="driver-cell">
+                                            <img src="<?php echo htmlspecialchars($driver['image_path']); ?>" alt="Driver" class="w-6 h-6 rounded-full object-cover">
+                                            <span><?php echo htmlspecialchars($driver['fullname']); ?> (<?php echo htmlspecialchars($driver['team_name']); ?>)</span>
+                                            <input type="hidden" name="driver_id[]" value="<?php echo htmlspecialchars($driver['id']); ?>">
+                                        </div>
                                     </td>
                                     <td class="p-3">
-                                        <input type="number" name="position[]" placeholder="Pos" 
+                                        <input type="number" name="position[]" placeholder="Pos (1-<?php echo count($drivers); ?>)" 
                                                value="<?php echo htmlspecialchars($current_result['position']); ?>"
-                                               class="form-input w-20 text-center p-2">
+                                               min="1"
+                                               class="form-input w-20 text-center p-2 result-position">
                                     </td>
                                     <td class="p-3">
-                                        <input type="number" name="points[]" placeholder="Pts" 
-                                               value="<?php echo htmlspecialchars($current_result['points']); ?>"
-                                               class="form-input w-20 text-center p-2">
+                                        <!-- Display Points (Read-only field) -->
+                                        <div class="points-display result-points-display" data-current-points="<?php echo $current_result['points']; ?>">
+                                            <?php echo $current_result['points'] > 0 ? htmlspecialchars($current_result['points']) : '0'; ?>
+                                        </div>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -218,6 +255,35 @@ $races = get_all_races($conn);
                 </button>
             </form>
         </div>
+        
+        <script>
+            // F1 Points Map (Used for client-side display)
+            const F1_POINTS_MAP = <?php echo json_encode($F1_RACE_POINTS); ?>;
+
+            function updateCalculatedPoints(inputElement) {
+                const position = parseInt(inputElement.value);
+                const pointsDisplay = inputElement.closest('tr').querySelector('.result-points-display');
+                let calculatedPoints = 0;
+
+                if (position > 0 && F1_POINTS_MAP.hasOwnProperty(position)) {
+                    calculatedPoints = F1_POINTS_MAP[position];
+                }
+                
+                // Update the visible points display element
+                pointsDisplay.textContent = calculatedPoints;
+            }
+            
+            // Re-apply event listeners and initial update
+            document.querySelectorAll('.result-position').forEach(input => {
+                // Ensure event listener is attached (important when navigating in single-page context)
+                input.oninput = () => updateCalculatedPoints(input);
+                
+                // Initial call to set points display correctly based on loaded positions
+                updateCalculatedPoints(input);
+            });
+            
+        </script>
+        
         <?php endif; ?>
 
         <div class="bg-gray-800 rounded-xl overflow-x-auto shadow-lg">

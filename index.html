@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Added for responsiveness -->
     <title>Welcome to F1 Academy</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -9,33 +10,21 @@
         .hover\:bg-lightpink:hover { background-color: lightpink; }
     </style>
 </head>
-<body class="font-sans bg-black text-white text-center flex flex-col min-h-screen pt-24 m-0">
-<br>
-<br>
+<!-- FIX: Replaced margin/padding and used flex properties to ensure consistent vertical and horizontal centering on all devices. -->
+<body class="font-sans bg-black text-white text-center flex flex-col h-screen m-0 justify-center items-center">
 
-    <div class="container flex flex-col items-center gap-5">
-        <img src="image/F1AcademyLogo.png" alt="F1 Academy Logo" class="w-80 h-auto">
-        <br>
-        <br>
+    <div class="container flex flex-col items-center gap-5 my-auto p-4 max-w-sm">
+        <img src="image/F1AcademyLogo.png" alt="F1 Academy Logo" class="w-80 h-auto mb-4">
 
         <h1 class="text-4xl font-bold mt-4 mb-2">Welcome to F1 Academy</h1>
-        <br>
-
-        <a href="register.php" class="signup-button bg-hotpink text-white py-3 px-8 rounded-xl no-underline font-bold text-lg transition duration-300 hover:bg-lightpink">
+        
+        <a href="register.php" class="signup-button bg-hotpink text-white py-3 px-8 rounded-xl no-underline font-bold text-lg transition duration-300 hover:bg-lightpink mt-4">
             Sign Up
         </a>
     </div>
-    <br>
-    <br>
-    <br>
-    <br>
-    <br>
-    <br>
-    <br>
-    <br>
-    <br>
 
-    <footer class="text-center p-5 mt-auto text-sm text-gray-400">
+    <!-- Footer now consistently sticks to the bottom -->
+    <footer class="text-center p-5 text-sm text-gray-400 absolute bottom-0 w-full">
         © 2025 F1 Academy Inc. All rights reserved.
     </footer>
 
