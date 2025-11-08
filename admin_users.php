@@ -40,7 +40,6 @@ $users = get_all_users($conn);
 </head>
 <body class="bg-gray-900 text-white font-sans flex">
 
-    <!-- Sidebar Navigation (FIXED: Added all missing admin links) -->
     <aside class="w-64 bg-gray-800 h-screen fixed p-6">
         <h1 class="text-3xl font-extrabold mb-8 text-hotpink">Admin Panel</h1>
         <nav class="admin-nav space-y-4">
@@ -55,7 +54,6 @@ $users = get_all_users($conn);
         </nav>
     </aside>
 
-    <!-- Main Content Area -->
     <div class="flex-1 ml-64 p-10">
         <header class="mb-8 border-b border-gray-700 pb-4">
             <h2 class="text-4xl font-bold">Registered Users (<?php echo count($users); ?>)</h2>
@@ -64,7 +62,6 @@ $users = get_all_users($conn);
 
         <?php echo $message; ?>
 
-        <!-- Users Table -->
         <div class="bg-gray-800 rounded-xl overflow-x-auto shadow-lg">
             <table class="min-w-full table-auto text-left">
                 <thead>
