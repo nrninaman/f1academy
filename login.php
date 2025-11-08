@@ -3,6 +3,16 @@ session_start();
 // Include the database connection and query functions
 include("conn.php");
 
+// NEW FIX: If already logged in, redirect to the appropriate dashboard
+if (isset($_SESSION['user_id'])) {
+    if ($_SESSION['role'] === 'admin') {
+        header("Location: admin_dashboard.php");
+    } else {
+        header("Location: dashboard.php");
+    }
+    exit();
+}
+
 // Handle POST request for login
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = $_POST['email'];

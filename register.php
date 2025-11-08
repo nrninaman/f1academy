@@ -2,6 +2,16 @@
 session_start();
 include("conn.php");
 
+// NEW FIX: If already logged in, redirect to the appropriate dashboard
+if (isset($_SESSION['user_id'])) {
+    if ($_SESSION['role'] === 'admin') {
+        header("Location: admin_dashboard.php");
+    } else {
+        header("Location: dashboard.php");
+    }
+    exit();
+}
+
 $nationalities = [
     "American", "Australian", "Austrian", "Bahraini", "Belgian", "Brazilian", "British", 
     "Canadian", "Chinese", "Danish", "Dutch", "Egypt", "Finnish", "French", "German", "Hungary",
