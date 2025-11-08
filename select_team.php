@@ -12,7 +12,7 @@ if (!isset($_SESSION['user_id'])) {
   <title>F1 Teams 2025</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    /* Custom colors based on original design */
+
     .bg-mclaren { background-color: #ff8000;  }
     .bg-ferrari { background-color: #da1212;  }
     .bg-mercedes { background-color: #00c0b5;  }
@@ -94,7 +94,6 @@ if (!isset($_SESSION['user_id'])) {
 <script>
 function selectTeam(team) {
   if (confirm("You selected: " + team + ". Confirm?")) {
-    // Corrected target to select_sponsor.php
     fetch("save_team.php", {
       method: "POST",
       headers: {

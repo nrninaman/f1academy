@@ -127,10 +127,6 @@ function delete_user_by_id($conn, $id) {
     return $success;
 }
 
-/**
- * FIXED (N+1 Optimization): Rewritten to use LEFT JOIN/GROUP BY to fetch driver count in one query 
- * instead of generating N+1 queries.
- */
 function get_all_teams($conn) {
     $query = "SELECT t.*, COUNT(d.id) as driver_count 
               FROM teams t 
@@ -258,9 +254,6 @@ function delete_driver_by_id($conn, $id) {
     return $success;
 }
 
-/**
- * Recalculates overall driver points and standing_position from completed races.
- */
 function recalculate_overall_driver_standings($conn) {
     // 1. Reset and calculate total points for each driver from all completed races
     $point_calculation_query = "
@@ -276,6 +269,7 @@ function recalculate_overall_driver_standings($conn) {
 
     // 2. Recalculate and update standing positions based on new total points
     // Using a JOIN with a subquery to simulate ranking without multi_query
+    
     $rank_update_query = "
         UPDATE drivers d
         JOIN (
@@ -335,10 +329,9 @@ function delete_race_by_id($conn, $id) {
     return $success;
 }
 
-/**
- * FIXED (Missing Component): Function added to retrieve raw race results (driver_id, position, points) 
- * needed for pre-filling the edit form in admin_races.php.
- */
+// FIXED (Missing Component): Function added to retrieve raw race results (driver_id, position, points) 
+// needed for pre-filling the edit form in admin_races.php.
+ 
 function get_race_results($conn, $race_id) {
     $stmt = $conn->prepare("
         SELECT 
@@ -361,9 +354,7 @@ function get_race_results($conn, $race_id) {
     return $data;
 }
 
-/**
- * Fetches race-specific results (Race Standings).
- */
+// Fetches race-specific results (Race Standings).
 function get_race_standings_data($conn, $race_id) {
     $stmt = $conn->prepare("
         SELECT 

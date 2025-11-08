@@ -10,14 +10,10 @@ if (!isset($_SESSION['user_id'])) {
 $user_id = $_SESSION['user_id'];
 $message = "";
 
-// Team list standardized (No Change)
 $f1_teams = [
     "Ferrari", "Mercedes", "Red Bull Racing", "McLaren", "Aston Martin", "Alpine", "Williams", "Kick Sauber", "RB Cash App"
 ];
 
-// ----------------------------------------------------------------------------------
-// CRITICAL FIX: Updated Sponsor list to reflect actual F1 Title Sponsors
-// ----------------------------------------------------------------------------------
 $f1_sponsors = [
     'Oracle',
     'HP (Hewlett-Packard)',
@@ -64,16 +60,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile'])) {
 
         // Use function to update user profile (including name, email, and setting requests)
         if (update_user_full_profile_and_requests($conn, $new_fullname, $new_email, $new_nationality, $team_request, $sponsor_request, $user_id)) {
-            // Update session for immediate display of name/email change
             $_SESSION['fullname'] = $new_fullname;
 
             $success_message = "Profile updated successfully!";
             if ($team_request) {
-                // FIX: Removed ** from notification
                 $success_message .= " Team request for <strong>$team_request</strong> submitted for admin approval.";
             }
             if ($sponsor_request) {
-                // FIX: Removed ** from notification
                 $success_message .= " Sponsor request for <strong>$sponsor_request</strong> submitted for admin approval.";
             }
             $message = "<div class='text-green-500 font-bold'>$success_message</div>";
@@ -84,7 +77,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile'])) {
     }
 }
 
-// Retrieve current user details (including requests)
 $user = get_user_by_id($conn, $user_id);
 
 if (!$user) {

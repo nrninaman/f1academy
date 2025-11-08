@@ -9,7 +9,6 @@ $drivers = [];
 
 if ($team_name) {
     $team = get_team_by_name($conn, $team_name);
-    // Fetch drivers for this team (Manual query since no function for this specific fetch exists yet)
     $stmt = $conn->prepare("SELECT id, fullname, image_path, standing_position FROM drivers WHERE team_name = ? ORDER BY standing_position ASC");
     $stmt->bind_param("s", $team_name);
     $stmt->execute();

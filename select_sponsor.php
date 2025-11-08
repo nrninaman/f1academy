@@ -1,29 +1,25 @@
 <?php
 session_start();
-// Include the database connection and query functions
 include('conn.php');
 
-// Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit();
 }
 
-// Full list of sponsors for display and validation - RESTRICTED TO ONLY MAIN 4
 $f1_sponsors = [
     'Red Bull', 'Mercedes', 'Ferrari', 'McLaren', 
 ];
 
-// Handle POST request for sponsor selection
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['sponsor'])) {
     $selected_sponsor = $_POST['sponsor'];
     $user_id = $_SESSION['user_id'];
     
-    // Validate selected sponsor against the restricted list (basic security)
+    
     if (!in_array($selected_sponsor, $f1_sponsors)) {
          echo "
         <script>
-            alert('❌ Error: Invalid sponsor selected. Please try again.');
+            alert('Error: Invalid sponsor selected. Please try again.');
             window.location.href = 'select_sponsor.php'; 
         </script>";
         exit();
@@ -57,15 +53,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['sponsor'])) {
     <title>Choose Your Sponsor</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Custom colors based on original design */
+    
         .bg-hotpink { background-color: hotpink; }
         .text-hotpink { color: hotpink; }
-        .bg-redbull { background-color: #002f6c; }     /* Deep blue */
-        .bg-mercedes { background-color: #00c0b5; }   /* Teal */
-        .bg-ferrari { background-color: #da1212; }    /* Red */
-        .bg-mclaren { background-color: #ff8000; }    /* Orange */
+        .bg-redbull { background-color: #002f6c; }
+        .bg-mercedes { background-color: #00c0b5; }
+        .bg-ferrari { background-color: #da1212; }
+        .bg-mclaren { background-color: #ff8000; }
 
-        /* General styling for cards */
         .sponsor-card {
             min-height: 250px;
         }

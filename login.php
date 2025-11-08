@@ -3,7 +3,7 @@ session_start();
 // Include the database connection and query functions
 include("conn.php");
 
-// NEW FIX: If already logged in, redirect to the appropriate dashboard
+// If already logged in, redirect to the appropriate dashboard
 if (isset($_SESSION['user_id'])) {
     if ($_SESSION['role'] === 'admin') {
         header("Location: admin_dashboard.php");
@@ -60,7 +60,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <title>F1 Academy Login</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Custom colors for hotpink and lightpink */
         .bg-hotpink { background-color: hotpink; }
         .text-hotpink { color: hotpink; }
         .hover\:bg-lightpink:hover { background-color: lightpink; }

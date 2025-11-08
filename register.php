@@ -2,7 +2,6 @@
 session_start();
 include("conn.php");
 
-// NEW FIX: If already logged in, redirect to the appropriate dashboard
 if (isset($_SESSION['user_id'])) {
     if ($_SESSION['role'] === 'admin') {
         header("Location: admin_dashboard.php");
@@ -20,19 +19,16 @@ $nationalities = [
     "Spanish", "Swedish", "Swiss", "Thai", "Turkish","Uzbekistan", "Venezuelan", "Wales"
 ];
 
-// Run only if form is submitted
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
-    // Retrieve form data
     $fullname = $_POST['fullname'];
     $email = $_POST['email'];
     $nationality = $_POST['nationality'];
-    $age = (int)$_POST['age']; // Cast age to integer
+    $age = (int)$_POST['age'];
     $gender = $_POST['gender'];
     $password = $_POST['password'];
     $confirm_password = $_POST['confirm_password'];
 
-    // Check password match (Functional check)
     if ($password !== $confirm_password) {
         echo "<script>alert('Passwords do not match!'); window.history.back();</script>";
         exit();
@@ -41,24 +37,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $user = check_user_by_email($conn, $email);
 
     if ($user) {
-        // Email already registered
         echo "<script>alert('Email already registered!'); window.history.back();</script>";
         exit();
     }
 
-    // Hash password before insertion
     $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
     if (insert_new_user($conn, $fullname, $email, $nationality, $age, $gender, $hashed_password)) {
-        // Find the newly inserted user ID to start the session before redirecting
         $new_user_details = check_user_by_email($conn, $email);
         if ($new_user_details) {
             $_SESSION['user_id'] = $new_user_details['id'];
             $_SESSION['fullname'] = $new_user_details['fullname'];
-            $_SESSION['role'] = $new_user_details['role']; // Should be 'user' by default
+            $_SESSION['role'] = $new_user_details['role'];
         }
-        
-        // Redirect to team selection 
+
         echo "<script>alert('Registration successful! Please select your team.'); window.location.href='select_team.php';</script>";
     } else {
         echo "<script>alert('Error: Unable to register'); window.history.back();</script>";
@@ -73,7 +65,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <title>F1 Academy Sign Up</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Custom colors for hotpink and lightpink */
         .bg-hotpink { background-color: hotpink; }
         .text-hotpink { color: hotpink; }
         .hover\:bg-lightpink:hover { background-color: lightpink; }
@@ -81,11 +72,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         .dark-select { 
             background-color: rgba(255, 255, 255, 0.1); 
             color: white;
-            /* Ensures the select box and datalist input look consistent */
         }
         .dark-select option {
-            background-color: #1f2937; /* Dark background for options list */
-            color: #ffffff; /* White text for options */
+            background-color: #1f2937;
+            color: #ffffff;
         }
     </style>
 </head>
