@@ -38,7 +38,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && (isset($_POST['add_driver']) || isse
 
     if (isset($_POST['add_driver'])) {
         if (insert_new_driver($conn, $fullname, $team_name, $sponsor_name, $standing_position, $points, $biography, $image_path)) {
-            // FIX: Removed ** from notification
             $message = "<div class='bg-green-500 text-white p-3 rounded-lg mb-4'>Driver <strong>$fullname</strong> added successfully.</div>";
         } else {
             $message = "<div class='bg-red-500 text-white p-3 rounded-lg mb-4'>Error adding driver.</div>";

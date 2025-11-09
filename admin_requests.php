@@ -15,7 +15,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['approve_team'])) {
     $user_id = $_POST['user_id'];
     $team_name = $_POST['team_name'];
     if (approve_team_request($conn, $user_id, $team_name)) {
-        // FIX: Removed ** from notification
         $message = "<div class='bg-green-500 text-white p-3 rounded-lg mb-4'>Team request for User ID $user_id (Team: <strong>$team_name</strong>) approved.</div>";
     } else {
         $message = "<div class='bg-red-500 text-white p-3 rounded-lg mb-4'>Error approving team request for User ID $user_id.</div>";
@@ -27,14 +26,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['approve_sponsor'])) {
     $user_id = $_POST['user_id'];
     $sponsor_name = $_POST['sponsor_name'];
     if (approve_sponsor_request($conn, $user_id, $sponsor_name)) {
-        // FIX: Removed ** from notification
         $message = "<div class='bg-green-500 text-white p-3 rounded-lg mb-4'>Sponsor request for User ID $user_id (Sponsor: <strong>$sponsor_name</strong>) approved.</div>";
     } else {
         $message = "<div class='bg-red-500 text-white p-3 rounded-lg mb-4'>Error approving sponsor request for User ID $user_id.</div>";
     }
 }
 
-// Handle Approve BOTH Team and Sponsor Action - NEW LOGIC ADDED HERE
+// Handle Approve BOTH Team and Sponsor Action
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['approve_both'])) {
     $user_id = $_POST['user_id'];
     $team_name = $_POST['team_name'];

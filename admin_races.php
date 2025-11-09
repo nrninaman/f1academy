@@ -26,10 +26,10 @@ $F1_RACE_POINTS = [
 
 $message = "";
 $race_to_edit = null;
-$drivers = get_all_drivers($conn); // Get all drivers for results form
+$drivers = get_all_drivers($conn);
 $race_results = [];
 
-// Handle Delete Race Action (Logic Unchanged)
+// Handle Delete Race Action
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['delete_race'])) {
     $race_id = $_POST['race_id'];
     if (delete_race_by_id($conn, $race_id)) {
@@ -40,7 +40,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['delete_race'])) {
     }
 }
 
-// Handle Insert/Update Race Action (Logic Unchanged)
+// Handle Insert/Update Race Action
 if ($_SERVER["REQUEST_METHOD"] == "POST" && (isset($_POST['add_race']) || isset($_POST['update_race']))) {
     $id = isset($_POST['race_id']) ? $_POST['race_id'] : null;
     $name = $_POST['name'];
@@ -126,15 +126,13 @@ $races = get_all_races($conn);
         th, td { padding: 12px; border-bottom: 1px solid #374151; }
         .form-input { padding: 10px; border-radius: 6px; border: 1px solid #4b5563; background-color: #1f2937; color: white; width: 100%; box-sizing: border-box; }
         .points-display { background-color: #374151; color: #FF69B4; font-weight: bold; padding: 10px; border-radius: 6px; border: 1px solid #4b5563; text-align: center; }
-        
-        /* FIX: Ensure consistent vertical alignment in table cells */
         .results-table th, .results-table td {
-            vertical-align: middle; /* Align content vertically in the middle */
+            vertical-align: middle;
         }
         .results-table .driver-cell {
             display: flex;
-            align-items: center; /* Vertically center image and text */
-            gap: 12px; /* Space between image and text */
+            align-items: center;
+            gap: 12px;
         }
     </style>
 </head>
@@ -239,7 +237,6 @@ $races = get_all_races($conn);
                                                class="form-input w-20 text-center p-2 result-position">
                                     </td>
                                     <td class="p-3">
-                                        <!-- Display Points (Read-only field) -->
                                         <div class="points-display result-points-display" data-current-points="<?php echo $current_result['points']; ?>">
                                             <?php echo $current_result['points'] > 0 ? htmlspecialchars($current_result['points']) : '0'; ?>
                                         </div>

@@ -13,9 +13,9 @@ $remaining_teams = array_slice($teams, 3);
 // REVISED: Reorder the teams using the data directly from the sorted $teams array 
 // to ensure the team data and points match the visual position (P2, P1, P3).
 $podium_teams = [];
-if (isset($teams[1])) { $podium_teams[] = $teams[1]; } // Data for P2 (Silver Box)
-if (isset($teams[0])) { $podium_teams[] = $teams[0]; } // Data for P1 (Gold Center Box)
-if (isset($teams[2])) { $podium_teams[] = $teams[2]; } // Data for P3 (Bronze Box)
+if (isset($teams[1])) { $podium_teams[] = $teams[1]; }
+if (isset($teams[0])) { $podium_teams[] = $teams[0]; }
+if (isset($teams[2])) { $podium_teams[] = $teams[2]; }
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -24,12 +24,12 @@ if (isset($teams[2])) { $podium_teams[] = $teams[2]; } // Data for P3 (Bronze Bo
     <title>Coach Ranking (Team Standings) - F1 Academy</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .bg-hotpink { background-color: #FF69B4; } /* Ensuring hotpink is defined */
+        .bg-hotpink { background-color: #FF69B4; }
         .text-hotpink { color: #FF69B4; }
-        .glow-shadow { box-shadow: 0 0 15px rgba(255, 105, 180, 0.6); } /* Hotpink glow */
-        .gradient-gold { background: linear-gradient(145deg, #FFD700 20%, #FFA500 80%); } /* Gold gradient for P1 */
-        .gradient-silver { background: linear-gradient(145deg, #C0C0C0 20%, #A9A9A9 80%); } /* Silver gradient for P2 */
-        .gradient-bronze { background: linear-gradient(145deg, #CD7F32 20%, #8B4513 80%); } /* Bronze gradient for P3 */
+        .glow-shadow { box-shadow: 0 0 15px rgba(255, 105, 180, 0.6); }
+        .gradient-gold { background: linear-gradient(145deg, #FFD700 20%, #FFA500 80%); }
+        .gradient-silver { background: linear-gradient(145deg, #C0C0C0 20%, #A9A9A9 80%); }
+        .gradient-bronze { background: linear-gradient(145deg, #CD7F32 20%, #8B4513 80%); }
     </style>
 </head>
 <body class="bg-gray-900 text-white font-sans min-h-screen p-6 md:p-10">
@@ -54,14 +54,14 @@ if (isset($teams[2])) { $podium_teams[] = $teams[2]; } // Data for P3 (Bronze Bo
                     if ($current_rank === 1) {
                         $bg_class = 'gradient-gold glow-shadow';
                         $icon = '🥇';
-                        $size_class = 'h-64'; // P1 is taller
+                        $size_class = 'h-64';
                     } elseif ($current_rank === 2) {
                         $bg_class = 'gradient-silver';
                         $icon = '🥈';
-                    } else { // Rank 3
+                    } else {
                         $bg_class = 'gradient-bronze';
                         $icon = '🥉';
-                        $text_color = 'text-gray-100'; // For better contrast on bronze
+                        $text_color = 'text-gray-100';
                     }
                 ?>
                 <div class="p-4 md:p-6 rounded-xl text-center flex flex-col justify-center transform transition duration-500 hover:scale-[1.05] <?php echo $bg_class; ?> <?php echo $size_class; ?>">

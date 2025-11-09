@@ -32,7 +32,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && (isset($_POST['add_team']) || isset(
 
     if (isset($_POST['add_team'])) {
         if (insert_new_team($conn, $name, $base_country, $engine_supplier)) {
-            // FIX: Removed ** from notification
             $message = "<div class='bg-green-500 text-white p-3 rounded-lg mb-4'>Team <strong>$name</strong> added successfully.</div>";
         } else {
             $message = "<div class='bg-red-500 text-white p-3 rounded-lg mb-4'>Error adding team.</div>";
